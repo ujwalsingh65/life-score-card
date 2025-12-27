@@ -205,6 +205,77 @@ export function getWeeklyStats(): { completed: number; total: number } {
   return { completed, total };
 }
 
+export function getWeeklyData(): { day: string; completed: number; total: number; percentage: number }[] {
+  const habits = getHabits();
+  const weekDates = getWeekDates();
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  
+  return weekDates.map((date, index) => {
+    const dayOfWeek = date.getDay();
+    const dateStr = formatDate(date);
+    let total = 0;
+    let completed = 0;
+    
+    for (const habit of habits) {
+      if (habit.targetDays.includes(dayOfWeek)) {
+        total++;
+        if (isHabitCompleted(habit.id, dateStr)) {
+          completed++;
+        }
+      }
+    }
+    
+    return { 
+      day: dayNames[index], 
+      completed, 
+      total,
+      percentage: total > 0 ? Math.round((completed / total) * 100) : 0
+    };
+  });
+}
+
+export function getCategoryStats(): { name: string; value: number; color: string }[] {
+  const habits = getHabits();
+  const categoryCount: Record<string, { count: number; color: string }> = {};
+  
+  habits.forEach((habit) => {
+    if (!categoryCount[habit.category]) {
+      categoryCount[habit.category] = { count: 0, color: habit.color };
+    }
+    categoryCount[habit.category].count++;
+  });
+  
+  return Object.entries(categoryCount).map(([name, data]) => ({
+    name: name.charAt(0).toUpperCase() + name.slice(1),
+    value: data.count,
+    color: data.color,
+  }));
+}
+
+export function getHabitCompletionData(): { name: string; completed: number; missed: number }[] {
+  const habits = getHabits();
+  const weekDates = getWeekDates();
+  
+  return habits.map((habit) => {
+    let completed = 0;
+    let missed = 0;
+    
+    weekDates.forEach((date) => {
+      const dayOfWeek = date.getDay();
+      if (habit.targetDays.includes(dayOfWeek)) {
+        const dateStr = formatDate(date);
+        if (isHabitCompleted(habit.id, dateStr)) {
+          completed++;
+        } else if (date < new Date()) {
+          missed++;
+        }
+      }
+    });
+    
+    return { name: habit.name, completed, missed };
+  });
+}
+
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 15);
 }
