@@ -1,7 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Zap, LayoutGrid, Calendar, Trash2, MoreVertical, BarChart3, Trophy } from "lucide-react";
 import { useHabits } from "@/hooks/useHabits";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { HabitCard } from "@/components/HabitCard";
 import { AddHabitDialog } from "@/components/AddHabitDialog";
 import { WeeklyView } from "@/components/WeeklyView";
@@ -11,6 +12,7 @@ import { AnalyticsCharts } from "@/components/AnalyticsCharts";
 import { PlayerLevel } from "@/components/PlayerLevel";
 import { AchievementsPanel } from "@/components/AchievementsPanel";
 import { AchievementToast } from "@/components/AchievementToast";
+import { LevelUpOverlay } from "@/components/LevelUpOverlay";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -38,11 +40,16 @@ export default function Index() {
     getTodayStats,
   } = useHabits();
 
+  const { playQuestComplete, playLevelUp, playAchievement, playXPGain } = useSoundEffects();
+
   const [playerStats, setPlayerStats] = useState<PlayerStats>(() => 
     calculatePlayerStats(getTotalXP())
   );
   const [xpGain, setXpGain] = useState(0);
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [levelUpData, setLevelUpData] = useState({ level: 1, rank: "E-Rank Hunter" });
+  const previousLevelRef = useRef(playerStats.level);
 
   const today = formatDate(new Date());
   const todayHabits = getTodayHabits();
@@ -57,20 +64,34 @@ export default function Index() {
     ? (todayStats.completed / todayStats.total) * 100 
     : 0;
 
-  // Handle quest completion with XP and achievements
+  // Handle quest completion with XP, achievements, and sounds
   const handleQuestToggle = (habitId: string) => {
     const wasCompleted = isCompleted(habitId, today);
     toggleHabitLog(habitId, today);
     
     // Only grant XP when completing, not uncompleting
     if (!wasCompleted) {
+      const previousLevel = playerStats.level;
       const streak = getStreak(habitId);
       const willBePerfect = todayStats.completed + 1 === todayStats.total;
       const earned = calculateCompletionXP(streak, willBePerfect);
       
       const newTotal = addXP(earned);
-      setPlayerStats(calculatePlayerStats(newTotal));
+      const newStats = calculatePlayerStats(newTotal);
+      setPlayerStats(newStats);
       setXpGain(earned);
+      
+      // Play quest complete sound
+      playQuestComplete();
+      
+      // Check for level up
+      if (newStats.level > previousLevel) {
+        setTimeout(() => {
+          setLevelUpData({ level: newStats.level, rank: newStats.rank });
+          setShowLevelUp(true);
+          playLevelUp();
+        }, 300);
+      }
       
       // Clear XP popup after animation
       setTimeout(() => setXpGain(0), 2000);
@@ -80,6 +101,7 @@ export default function Index() {
         const unlocked = checkAndUnlockAchievements();
         if (unlocked.length > 0) {
           setNewAchievement(unlocked[0]);
+          playAchievement();
         }
       }, 500);
     }
@@ -88,10 +110,12 @@ export default function Index() {
   // Check achievements on habit creation
   const handleAddHabit = (habit: Parameters<typeof addHabit>[0]) => {
     addHabit(habit);
+    playXPGain();
     setTimeout(() => {
       const unlocked = checkAndUnlockAchievements();
       if (unlocked.length > 0) {
         setNewAchievement(unlocked[0]);
+        playAchievement();
       }
     }, 300);
   };
@@ -298,6 +322,14 @@ export default function Index() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Level Up Overlay */}
+      <LevelUpOverlay
+        show={showLevelUp}
+        level={levelUpData.level}
+        rank={levelUpData.rank}
+        onComplete={() => setShowLevelUp(false)}
+      />
 
       {/* Achievement Toast */}
       <AchievementToast 
