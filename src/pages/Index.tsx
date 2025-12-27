@@ -1,7 +1,9 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Zap, LayoutGrid, Calendar, Trash2, MoreVertical, BarChart3, Trophy } from "lucide-react";
-import { useHabits } from "@/hooks/useHabits";
+import { Flame, Zap, LayoutGrid, Calendar, Trash2, MoreVertical, BarChart3, Trophy, LogOut, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { HabitCard } from "@/components/HabitCard";
 import { AddHabitDialog } from "@/components/AddHabitDialog";
@@ -21,40 +23,83 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatDate, getWeeklyStats } from "@/lib/habits";
-import { getTotalXP, addXP, calculatePlayerStats, calculateCompletionXP } from "@/lib/xp";
-import { checkAndUnlockAchievements, Achievement } from "@/lib/achievements";
+import { calculatePlayerStats, calculateCompletionXP } from "@/lib/xp";
+import { ACHIEVEMENTS, Achievement } from "@/lib/achievements";
 import { PlayerStats } from "@/types/habit";
 
 export default function Index() {
+  const navigate = useNavigate();
+  const { user, loading: authLoading, signOut } = useAuth();
   const {
     habits,
-    loading,
+    logs,
+    totalXP,
+    unlockedAchievements,
+    loading: dataLoading,
     addHabit,
     deleteHabit,
     toggleHabitLog,
+    updateXP,
+    unlockAchievement,
     isCompleted,
     getStreak,
     getBestStreak,
     getTodayHabits,
     getTodayStats,
-  } = useHabits();
+  } = useSupabaseData();
 
   const { playQuestComplete, playLevelUp, playAchievement, playXPGain } = useSoundEffects();
 
   const [playerStats, setPlayerStats] = useState<PlayerStats>(() => 
-    calculatePlayerStats(getTotalXP())
+    calculatePlayerStats(totalXP)
   );
   const [xpGain, setXpGain] = useState(0);
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [levelUpData, setLevelUpData] = useState({ level: 1, rank: "E-Rank Hunter" });
-  const previousLevelRef = useRef(playerStats.level);
 
-  const today = formatDate(new Date());
+  // Update player stats when XP changes
+  useEffect(() => {
+    setPlayerStats(calculatePlayerStats(totalXP));
+  }, [totalXP]);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
+
+  const today = new Date().toISOString().split("T")[0];
   const todayHabits = getTodayHabits();
   const todayStats = getTodayStats();
-  const weeklyStats = getWeeklyStats();
+
+  // Calculate weekly stats
+  const weeklyStats = useMemo(() => {
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    
+    let total = 0;
+    let completed = 0;
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(weekStart);
+      date.setDate(date.getDate() + i);
+      const dateStr = date.toISOString().split("T")[0];
+      const dayOfWeek = date.getDay();
+      
+      habits.forEach(habit => {
+        if (habit.targetDays.includes(dayOfWeek)) {
+          total++;
+          if (isCompleted(habit.id, dateStr)) {
+            completed++;
+          }
+        }
+      });
+    }
+    
+    return { completed, total };
+  }, [habits, isCompleted]);
 
   const totalBestStreak = useMemo(() => {
     return habits.reduce((max, h) => Math.max(max, getBestStreak(h.id)), 0);
@@ -64,19 +109,77 @@ export default function Index() {
     ? (todayStats.completed / todayStats.total) * 100 
     : 0;
 
+  // Check and unlock achievements
+  const checkAchievements = async () => {
+    const maxStreak = habits.reduce((max, h) => Math.max(max, getBestStreak(h.id)), 0);
+    const totalCompletions = logs.filter(l => l.completed).length;
+    const habitsCount = habits.length;
+    
+    // Calculate perfect days
+    const dateMap: Record<string, Set<string>> = {};
+    logs.forEach((log) => {
+      if (log.completed) {
+        if (!dateMap[log.date]) {
+          dateMap[log.date] = new Set();
+        }
+        dateMap[log.date].add(log.habitId);
+      }
+    });
+    
+    let perfectDays = 0;
+    Object.entries(dateMap).forEach(([dateStr, completedHabitIds]) => {
+      const date = new Date(dateStr);
+      const dayOfWeek = date.getDay();
+      const habitsForDay = habits.filter((h) => h.targetDays.includes(dayOfWeek));
+      if (habitsForDay.length > 0 && habitsForDay.every((h) => completedHabitIds.has(h.id))) {
+        perfectDays++;
+      }
+    });
+
+    for (const achievement of ACHIEVEMENTS) {
+      if (unlockedAchievements.includes(achievement.id)) continue;
+
+      let shouldUnlock = false;
+      
+      switch (achievement.type) {
+        case "streak":
+          shouldUnlock = maxStreak >= achievement.requirement;
+          break;
+        case "total_completions":
+          shouldUnlock = totalCompletions >= achievement.requirement;
+          break;
+        case "perfect_days":
+          shouldUnlock = perfectDays >= achievement.requirement;
+          break;
+        case "habits_created":
+          shouldUnlock = habitsCount >= achievement.requirement;
+          break;
+      }
+
+      if (shouldUnlock) {
+        const unlocked = await unlockAchievement(achievement.id);
+        if (unlocked) {
+          setNewAchievement(achievement);
+          playAchievement();
+          return; // Only show one at a time
+        }
+      }
+    }
+  };
+
   // Handle quest completion with XP, achievements, and sounds
-  const handleQuestToggle = (habitId: string) => {
+  const handleQuestToggle = async (habitId: string) => {
     const wasCompleted = isCompleted(habitId, today);
-    toggleHabitLog(habitId, today);
+    const completed = await toggleHabitLog(habitId, today);
     
     // Only grant XP when completing, not uncompleting
-    if (!wasCompleted) {
+    if (completed && !wasCompleted) {
       const previousLevel = playerStats.level;
       const streak = getStreak(habitId);
       const willBePerfect = todayStats.completed + 1 === todayStats.total;
       const earned = calculateCompletionXP(streak, willBePerfect);
       
-      const newTotal = addXP(earned);
+      const newTotal = await updateXP(earned);
       const newStats = calculatePlayerStats(newTotal);
       setPlayerStats(newStats);
       setXpGain(earned);
@@ -97,35 +200,32 @@ export default function Index() {
       setTimeout(() => setXpGain(0), 2000);
       
       // Check for new achievements
-      setTimeout(() => {
-        const unlocked = checkAndUnlockAchievements();
-        if (unlocked.length > 0) {
-          setNewAchievement(unlocked[0]);
-          playAchievement();
-        }
-      }, 500);
+      setTimeout(() => checkAchievements(), 500);
     }
   };
   
   // Check achievements on habit creation
-  const handleAddHabit = (habit: Parameters<typeof addHabit>[0]) => {
-    addHabit(habit);
+  const handleAddHabit = async (habit: Parameters<typeof addHabit>[0]) => {
+    await addHabit(habit);
     playXPGain();
-    setTimeout(() => {
-      const unlocked = checkAndUnlockAchievements();
-      if (unlocked.length > 0) {
-        setNewAchievement(unlocked[0]);
-        playAchievement();
-      }
-    }, 300);
+    setTimeout(() => checkAchievements(), 300);
   };
 
-  if (loading) {
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
+  if (authLoading || dataLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-shimmer h-8 w-32 rounded-lg" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
@@ -143,7 +243,17 @@ export default function Index() {
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Level Up Your Life</p>
               </div>
             </div>
-            <AddHabitDialog onAdd={handleAddHabit} />
+            <div className="flex items-center gap-2">
+              <AddHabitDialog onAdd={handleAddHabit} />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleSignOut}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -244,7 +354,7 @@ export default function Index() {
                       <p className="mt-2 text-muted-foreground">
                         Initialize your first quest to begin leveling up
                       </p>
-                      <AddHabitDialog onAdd={addHabit}>
+                      <AddHabitDialog onAdd={handleAddHabit}>
                         <Button variant="neon" className="mt-4">
                           Initialize First Quest
                         </Button>
@@ -317,7 +427,7 @@ export default function Index() {
               animate={{ opacity: 1, y: 0 }}
               className="rounded-lg border border-primary/20 bg-card p-6 shadow-system"
             >
-              <AchievementsPanel />
+              <AchievementsPanel unlockedAchievementIds={unlockedAchievements} />
             </motion.div>
           </TabsContent>
         </Tabs>

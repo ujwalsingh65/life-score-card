@@ -1,24 +1,24 @@
-import { ACHIEVEMENTS, Achievement, getUnlockedAchievements, getRarityColor, getMaxStreak, getTotalCompletions, getPerfectDaysCount } from "@/lib/achievements";
-import { getHabits } from "@/lib/habits";
+import { ACHIEVEMENTS, Achievement, getRarityColor } from "@/lib/achievements";
 import { AchievementBadge } from "./AchievementBadge";
 import { motion } from "framer-motion";
 import { Trophy, Flame, Target, Calendar, ScrollText } from "lucide-react";
 
 interface AchievementsPanelProps {
-  newAchievements?: Achievement[];
+  unlockedAchievementIds?: string[];
+  stats?: {
+    maxStreak: number;
+    totalCompletions: number;
+    perfectDays: number;
+    habitsCreated: number;
+  };
 }
 
-export function AchievementsPanel({ newAchievements = [] }: AchievementsPanelProps) {
-  const unlockedAchievements = getUnlockedAchievements();
-  const unlockedCount = unlockedAchievements.length;
+export function AchievementsPanel({ 
+  unlockedAchievementIds = [],
+  stats = { maxStreak: 0, totalCompletions: 0, perfectDays: 0, habitsCreated: 0 }
+}: AchievementsPanelProps) {
+  const unlockedCount = unlockedAchievementIds.length;
   const totalCount = ACHIEVEMENTS.length;
-  
-  const stats = {
-    maxStreak: getMaxStreak(),
-    totalCompletions: getTotalCompletions(),
-    perfectDays: getPerfectDaysCount(),
-    habitsCreated: getHabits().length,
-  };
 
   const groupedAchievements = {
     streak: ACHIEVEMENTS.filter((a) => a.type === "streak"),
@@ -33,6 +33,8 @@ export function AchievementsPanel({ newAchievements = [] }: AchievementsPanelPro
     { key: "total_completions", label: "Quest Completions", icon: Target, stat: stats.totalCompletions, statLabel: "Total Completed" },
     { key: "habits_created", label: "Quest Collection", icon: ScrollText, stat: stats.habitsCreated, statLabel: "Quests Created" },
   ];
+
+  const isUnlocked = (achievementId: string) => unlockedAchievementIds.includes(achievementId);
 
   return (
     <div className="space-y-6">
@@ -56,7 +58,7 @@ export function AchievementsPanel({ newAchievements = [] }: AchievementsPanelPro
         <div className="text-right">
           <p className="text-sm text-muted-foreground">Completion</p>
           <p className="text-2xl font-bold text-primary">
-            {Math.round((unlockedCount / totalCount) * 100)}%
+            {totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0}%
           </p>
         </div>
       </motion.div>
@@ -89,7 +91,11 @@ export function AchievementsPanel({ newAchievements = [] }: AchievementsPanelPro
                 transition={{ delay: categoryIndex * 0.1 + index * 0.05 }}
                 className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted/10 transition-colors"
               >
-                <AchievementBadge achievement={achievement} size="md" />
+                <AchievementBadge 
+                  achievement={achievement} 
+                  size="md" 
+                  unlocked={isUnlocked(achievement.id)}
+                />
                 <div className="text-center">
                   <p className="text-xs font-medium text-foreground truncate max-w-[80px]">
                     {achievement.name}
