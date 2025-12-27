@@ -72,7 +72,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["DM Sans", "system-ui", "sans-serif"],
+        sans: ["Rajdhani", "system-ui", "sans-serif"],
+        display: ["Orbitron", "monospace"],
       },
       borderRadius: {
         lg: "var(--radius)",

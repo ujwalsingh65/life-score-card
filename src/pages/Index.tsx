@@ -1,12 +1,13 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Sparkles, LayoutGrid, Calendar, Trash2, MoreVertical } from "lucide-react";
+import { Flame, Zap, LayoutGrid, Calendar, Trash2, MoreVertical, BarChart3 } from "lucide-react";
 import { useHabits } from "@/hooks/useHabits";
 import { HabitCard } from "@/components/HabitCard";
 import { AddHabitDialog } from "@/components/AddHabitDialog";
 import { WeeklyView } from "@/components/WeeklyView";
 import { DashboardStats } from "@/components/DashboardStats";
 import { ProgressRing } from "@/components/ProgressRing";
+import { AnalyticsCharts } from "@/components/AnalyticsCharts";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -55,16 +56,16 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-primary/20 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-warm">
-                <Sparkles className="h-5 w-5 text-primary-foreground" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-neon animate-pulse-glow">
+                <Zap className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground">Habit Monitor</h1>
-                <p className="text-xs text-muted-foreground">Track. Grow. Succeed.</p>
+                <h1 className="font-display text-xl font-bold text-primary text-glow">QUEST MONITOR</h1>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">Level Up Your Life</p>
               </div>
             </div>
             <AddHabitDialog onAdd={addHabit} />
@@ -91,14 +92,18 @@ export default function Index() {
 
         {/* Main Content */}
         <Tabs defaultValue="today" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2 mx-auto">
-            <TabsTrigger value="today" className="gap-2">
+          <TabsList className="grid w-full max-w-lg grid-cols-3 mx-auto bg-secondary/50 border border-primary/20">
+            <TabsTrigger value="today" className="gap-2 font-display text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <LayoutGrid className="h-4 w-4" />
-              Today
+              TODAY
             </TabsTrigger>
-            <TabsTrigger value="week" className="gap-2">
+            <TabsTrigger value="week" className="gap-2 font-display text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Calendar className="h-4 w-4" />
-              This Week
+              WEEK
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-2 font-display text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <BarChart3 className="h-4 w-4" />
+              STATS
             </TabsTrigger>
           </TabsList>
 
@@ -109,18 +114,18 @@ export default function Index() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="rounded-2xl border bg-card p-6 flex flex-col items-center justify-center shadow-soft"
+                className="rounded-lg border border-primary/20 bg-card p-6 flex flex-col items-center justify-center shadow-system"
               >
-                <h2 className="text-lg font-semibold mb-4">Today's Progress</h2>
+                <h2 className="font-display text-lg font-semibold text-primary mb-4 text-glow">DAILY PROGRESS</h2>
                 <ProgressRing progress={todayPercentage} size={140} strokeWidth={12} />
                 <p className="mt-4 text-center text-muted-foreground">
                   {todayStats.completed === todayStats.total && todayStats.total > 0 ? (
-                    <span className="flex items-center gap-2 text-success font-medium">
+                    <span className="flex items-center gap-2 text-success font-semibold">
                       <Flame className="h-4 w-4 animate-streak-pulse" />
-                      All habits completed!
+                      QUEST COMPLETE!
                     </span>
                   ) : (
-                    `${todayStats.total - todayStats.completed} habits remaining`
+                    <span className="uppercase tracking-wide">{todayStats.total - todayStats.completed} quests remaining</span>
                   )}
                 </p>
               </motion.div>
@@ -128,10 +133,10 @@ export default function Index() {
               {/* Today's Habits */}
               <div className="lg:col-span-2 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Today's Habits</h2>
-                  <span className="text-sm text-muted-foreground">
+                  <h2 className="font-display text-lg font-semibold text-primary text-glow">ACTIVE QUESTS</h2>
+                  <span className="text-sm text-muted-foreground uppercase tracking-wide">
                     {new Date().toLocaleDateString("en-US", {
-                      weekday: "long",
+                      weekday: "short",
                       month: "short",
                       day: "numeric",
                     })}
@@ -143,16 +148,16 @@ export default function Index() {
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="rounded-xl border-2 border-dashed border-muted p-8 text-center"
+                      className="rounded-lg border-2 border-dashed border-primary/30 p-8 text-center"
                     >
-                      <Sparkles className="mx-auto h-12 w-12 text-muted-foreground/50" />
-                      <h3 className="mt-4 text-lg font-semibold">No habits for today</h3>
+                      <Zap className="mx-auto h-12 w-12 text-primary/50" />
+                      <h3 className="mt-4 font-display text-lg font-semibold text-primary">NO ACTIVE QUESTS</h3>
                       <p className="mt-2 text-muted-foreground">
-                        Create your first habit to start building better routines
+                        Initialize your first quest to begin leveling up
                       </p>
                       <AddHabitDialog onAdd={addHabit}>
-                        <Button variant="warm" className="mt-4">
-                          Create First Habit
+                        <Button variant="neon" className="mt-4">
+                          Initialize First Quest
                         </Button>
                       </AddHabitDialog>
                     </motion.div>
@@ -176,13 +181,13 @@ export default function Index() {
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-popover">
+                            <DropdownMenuContent align="end" className="bg-popover border-primary/20">
                               <DropdownMenuItem
                                 className="text-destructive focus:text-destructive"
                                 onClick={() => deleteHabit(habit.id)}
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
-                                Delete Habit
+                                Abandon Quest
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -200,9 +205,9 @@ export default function Index() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl border bg-card p-6 shadow-soft"
+              className="rounded-lg border border-primary/20 bg-card p-6 shadow-system"
             >
-              <h2 className="text-lg font-semibold mb-4">Weekly Overview</h2>
+              <h2 className="font-display text-lg font-semibold text-primary mb-4 text-glow">WEEKLY OVERVIEW</h2>
               <WeeklyView
                 habits={habits}
                 isCompleted={isCompleted}
@@ -210,56 +215,18 @@ export default function Index() {
               />
             </motion.div>
           </TabsContent>
-        </Tabs>
 
-        {/* All Habits (when none today) */}
-        {todayHabits.length === 0 && habits.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-8"
-          >
-            <h2 className="text-lg font-semibold mb-4">All Habits</h2>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {habits.map((habit) => (
-                <div key={habit.id} className="relative group">
-                  <HabitCard
-                    habit={habit}
-                    isCompleted={false}
-                    streak={getStreak(habit.id)}
-                    onToggle={() => {}}
-                  />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-popover">
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onClick={() => deleteHabit(habit.id)}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete Habit
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <AnalyticsCharts habits={habits} />
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Footer */}
-      <footer className="border-t py-6 mt-12">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          Build better habits, one day at a time
+      <footer className="border-t border-primary/20 py-6 mt-12">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground font-display tracking-wider">
+          LEVEL UP YOUR LIFE • ONE QUEST AT A TIME
         </div>
       </footer>
     </div>

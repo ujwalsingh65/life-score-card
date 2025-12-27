@@ -57,9 +57,9 @@ export function AddHabitDialog({ onAdd, children }: AddHabitDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {children || (
-          <Button variant="warm" size="lg" className="gap-2">
+          <Button variant="neon" size="lg" className="gap-2">
             <Plus className="h-5 w-5" />
-            New Habit
+            New Quest
           </Button>
         )}
       </DialogTrigger>
@@ -152,8 +152,8 @@ export function AddHabitDialog({ onAdd, children }: AddHabitDialogProps) {
           </div>
 
           {/* Submit */}
-          <Button type="submit" variant="warm" className="w-full" size="lg">
-            Create Habit
+          <Button type="submit" variant="neon" className="w-full" size="lg">
+            Initialize Quest
           </Button>
         </form>
       </DialogContent>
