@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Zap, LayoutGrid, Calendar, Trash2, MoreVertical, BarChart3 } from "lucide-react";
 import { useHabits } from "@/hooks/useHabits";
@@ -8,6 +8,7 @@ import { WeeklyView } from "@/components/WeeklyView";
 import { DashboardStats } from "@/components/DashboardStats";
 import { ProgressRing } from "@/components/ProgressRing";
 import { AnalyticsCharts } from "@/components/AnalyticsCharts";
+import { PlayerLevel } from "@/components/PlayerLevel";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,6 +18,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDate, getWeeklyStats } from "@/lib/habits";
+import { getTotalXP, addXP, calculatePlayerStats, calculateCompletionXP } from "@/lib/xp";
+import { PlayerStats } from "@/types/habit";
 
 export default function Index() {
   const {
@@ -32,6 +35,11 @@ export default function Index() {
     getTodayStats,
   } = useHabits();
 
+  const [playerStats, setPlayerStats] = useState<PlayerStats>(() => 
+    calculatePlayerStats(getTotalXP())
+  );
+  const [xpGain, setXpGain] = useState(0);
+
   const today = formatDate(new Date());
   const todayHabits = getTodayHabits();
   const todayStats = getTodayStats();
@@ -44,6 +52,26 @@ export default function Index() {
   const todayPercentage = todayStats.total > 0 
     ? (todayStats.completed / todayStats.total) * 100 
     : 0;
+
+  // Handle quest completion with XP
+  const handleQuestToggle = (habitId: string) => {
+    const wasCompleted = isCompleted(habitId, today);
+    toggleHabitLog(habitId, today);
+    
+    // Only grant XP when completing, not uncompleting
+    if (!wasCompleted) {
+      const streak = getStreak(habitId);
+      const willBePerfect = todayStats.completed + 1 === todayStats.total;
+      const earned = calculateCompletionXP(streak, willBePerfect);
+      
+      const newTotal = addXP(earned);
+      setPlayerStats(calculatePlayerStats(newTotal));
+      setXpGain(earned);
+      
+      // Clear XP popup after animation
+      setTimeout(() => setXpGain(0), 2000);
+    }
+  };
 
   if (loading) {
     return (
@@ -74,10 +102,20 @@ export default function Index() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* Player Level */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <PlayerLevel stats={playerStats} showXPGain={xpGain} />
+        </motion.div>
+
         {/* Hero Stats */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
           className="mb-8"
         >
           <DashboardStats
@@ -169,7 +207,7 @@ export default function Index() {
                             habit={habit}
                             isCompleted={isCompleted(habit.id, today)}
                             streak={getStreak(habit.id)}
-                            onToggle={() => toggleHabitLog(habit.id, today)}
+                            onToggle={() => handleQuestToggle(habit.id)}
                           />
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
