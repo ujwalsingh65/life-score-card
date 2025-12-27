@@ -1,15 +1,14 @@
-import { Achievement, getRarityColor, getRarityGlow, isAchievementUnlocked } from "@/lib/achievements";
+import { Achievement, getRarityGlow } from "@/lib/achievements";
 import { motion } from "framer-motion";
 import { Lock } from "lucide-react";
 
 interface AchievementBadgeProps {
   achievement: Achievement;
   size?: "sm" | "md" | "lg";
+  unlocked?: boolean;
 }
 
-export function AchievementBadge({ achievement, size = "md" }: AchievementBadgeProps) {
-  const unlocked = isAchievementUnlocked(achievement.id);
-  
+export function AchievementBadge({ achievement, size = "md", unlocked = false }: AchievementBadgeProps) {
   const sizeClasses = {
     sm: "w-12 h-12 text-lg",
     md: "w-16 h-16 text-2xl",
