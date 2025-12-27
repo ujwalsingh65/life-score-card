@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Zap, LayoutGrid, Calendar, Trash2, MoreVertical, BarChart3 } from "lucide-react";
+import { Flame, Zap, LayoutGrid, Calendar, Trash2, MoreVertical, BarChart3, Trophy } from "lucide-react";
 import { useHabits } from "@/hooks/useHabits";
 import { HabitCard } from "@/components/HabitCard";
 import { AddHabitDialog } from "@/components/AddHabitDialog";
@@ -9,6 +9,8 @@ import { DashboardStats } from "@/components/DashboardStats";
 import { ProgressRing } from "@/components/ProgressRing";
 import { AnalyticsCharts } from "@/components/AnalyticsCharts";
 import { PlayerLevel } from "@/components/PlayerLevel";
+import { AchievementsPanel } from "@/components/AchievementsPanel";
+import { AchievementToast } from "@/components/AchievementToast";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,6 +21,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDate, getWeeklyStats } from "@/lib/habits";
 import { getTotalXP, addXP, calculatePlayerStats, calculateCompletionXP } from "@/lib/xp";
+import { checkAndUnlockAchievements, Achievement } from "@/lib/achievements";
 import { PlayerStats } from "@/types/habit";
 
 export default function Index() {
@@ -39,6 +42,7 @@ export default function Index() {
     calculatePlayerStats(getTotalXP())
   );
   const [xpGain, setXpGain] = useState(0);
+  const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
 
   const today = formatDate(new Date());
   const todayHabits = getTodayHabits();
@@ -53,7 +57,7 @@ export default function Index() {
     ? (todayStats.completed / todayStats.total) * 100 
     : 0;
 
-  // Handle quest completion with XP
+  // Handle quest completion with XP and achievements
   const handleQuestToggle = (habitId: string) => {
     const wasCompleted = isCompleted(habitId, today);
     toggleHabitLog(habitId, today);
@@ -70,7 +74,26 @@ export default function Index() {
       
       // Clear XP popup after animation
       setTimeout(() => setXpGain(0), 2000);
+      
+      // Check for new achievements
+      setTimeout(() => {
+        const unlocked = checkAndUnlockAchievements();
+        if (unlocked.length > 0) {
+          setNewAchievement(unlocked[0]);
+        }
+      }, 500);
     }
+  };
+  
+  // Check achievements on habit creation
+  const handleAddHabit = (habit: Parameters<typeof addHabit>[0]) => {
+    addHabit(habit);
+    setTimeout(() => {
+      const unlocked = checkAndUnlockAchievements();
+      if (unlocked.length > 0) {
+        setNewAchievement(unlocked[0]);
+      }
+    }, 300);
   };
 
   if (loading) {
@@ -96,7 +119,7 @@ export default function Index() {
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Level Up Your Life</p>
               </div>
             </div>
-            <AddHabitDialog onAdd={addHabit} />
+            <AddHabitDialog onAdd={handleAddHabit} />
           </div>
         </div>
       </header>
@@ -130,7 +153,7 @@ export default function Index() {
 
         {/* Main Content */}
         <Tabs defaultValue="today" className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-3 mx-auto bg-secondary/50 border border-primary/20">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4 mx-auto bg-secondary/50 border border-primary/20">
             <TabsTrigger value="today" className="gap-2 font-display text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <LayoutGrid className="h-4 w-4" />
               TODAY
@@ -142,6 +165,10 @@ export default function Index() {
             <TabsTrigger value="analytics" className="gap-2 font-display text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <BarChart3 className="h-4 w-4" />
               STATS
+            </TabsTrigger>
+            <TabsTrigger value="achievements" className="gap-2 font-display text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Trophy className="h-4 w-4" />
+              BADGES
             </TabsTrigger>
           </TabsList>
 
@@ -258,8 +285,25 @@ export default function Index() {
           <TabsContent value="analytics">
             <AnalyticsCharts habits={habits} />
           </TabsContent>
+
+          {/* Achievements Tab */}
+          <TabsContent value="achievements">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-lg border border-primary/20 bg-card p-6 shadow-system"
+            >
+              <AchievementsPanel />
+            </motion.div>
+          </TabsContent>
         </Tabs>
       </main>
+
+      {/* Achievement Toast */}
+      <AchievementToast 
+        achievement={newAchievement} 
+        onClose={() => setNewAchievement(null)} 
+      />
 
       {/* Footer */}
       <footer className="border-t border-primary/20 py-6 mt-12">
