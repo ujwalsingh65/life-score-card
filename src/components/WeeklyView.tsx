@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Check, X } from "lucide-react";
+import { Check, X, Lock } from "lucide-react";
 import { Habit, DAYS_OF_WEEK } from "@/types/habit";
 import { getWeekDates, formatDate } from "@/lib/habits";
 import { cn } from "@/lib/utils";
@@ -7,12 +7,13 @@ import { cn } from "@/lib/utils";
 interface WeeklyViewProps {
   habits: Habit[];
   isCompleted: (habitId: string, date: string) => boolean;
-  onToggle: (habitId: string, date: string) => void;
 }
 
-export function WeeklyView({ habits, isCompleted, onToggle }: WeeklyViewProps) {
+export function WeeklyView({ habits, isCompleted }: WeeklyViewProps) {
   const weekDates = getWeekDates();
   const today = formatDate(new Date());
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
 
   return (
     <div className="overflow-x-auto">
@@ -45,6 +46,12 @@ export function WeeklyView({ habits, isCompleted, onToggle }: WeeklyViewProps) {
           })}
         </div>
 
+        {/* Info Banner */}
+        <div className="mb-4 p-3 rounded-lg bg-secondary/30 border border-primary/20 flex items-center gap-2 text-sm text-muted-foreground">
+          <Lock className="h-4 w-4 text-primary" />
+          <span>Weekly progress is read-only and reflects your daily quest completions.</span>
+        </div>
+
         {/* Habit rows */}
         <div className="space-y-2">
           {habits.map((habit) => (
@@ -52,7 +59,7 @@ export function WeeklyView({ habits, isCompleted, onToggle }: WeeklyViewProps) {
               key={habit.id}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              className="grid grid-cols-8 gap-2 rounded-lg bg-card p-3 border"
+              className="grid grid-cols-8 gap-2 rounded-lg bg-card p-3 border border-primary/10"
             >
               <div className="flex items-center gap-2 truncate">
                 <span className="text-lg">{habit.icon}</span>
@@ -64,7 +71,12 @@ export function WeeklyView({ habits, isCompleted, onToggle }: WeeklyViewProps) {
                 const isTargetDay = habit.targetDays.includes(dayOfWeek);
                 const completed = isCompleted(habit.id, dateStr);
                 const isToday = dateStr === today;
-                const isPast = date < new Date() && !isToday;
+                
+                // Check if date is in the past
+                const checkDate = new Date(date);
+                checkDate.setHours(0, 0, 0, 0);
+                const isPast = checkDate < todayDate;
+                const isFuture = checkDate > todayDate;
 
                 if (!isTargetDay) {
                   return (
@@ -72,32 +84,43 @@ export function WeeklyView({ habits, isCompleted, onToggle }: WeeklyViewProps) {
                       key={dateStr}
                       className="flex items-center justify-center"
                     >
-                      <div className="h-8 w-8 rounded-lg bg-muted/50" />
+                      <div className="h-8 w-8 rounded-lg bg-muted/30" />
                     </div>
                   );
                 }
 
+                // Read-only display based on actual completion status
                 return (
-                  <motion.button
+                  <div
                     key={dateStr}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
                     className={cn(
                       "flex h-8 w-8 items-center justify-center rounded-lg mx-auto transition-all",
                       completed
-                        ? "bg-success text-success-foreground"
+                        ? "bg-success text-success-foreground shadow-[0_0_8px_hsla(145,70%,45%,0.4)]"
                         : isPast
                         ? "bg-destructive/20 text-destructive"
-                        : "bg-secondary hover:bg-primary/20"
+                        : isFuture
+                        ? "bg-secondary/50 border border-primary/10"
+                        : "bg-secondary border border-primary/20"
                     )}
-                    onClick={() => onToggle(habit.id, dateStr)}
+                    title={
+                      completed 
+                        ? "Completed" 
+                        : isPast 
+                        ? "Missed" 
+                        : isFuture 
+                        ? "Upcoming" 
+                        : "Today"
+                    }
                   >
                     {completed ? (
                       <Check className="h-4 w-4" />
                     ) : isPast ? (
                       <X className="h-4 w-4" />
+                    ) : isFuture ? (
+                      <Lock className="h-3 w-3 text-muted-foreground" />
                     ) : null}
-                  </motion.button>
+                  </div>
                 );
               })}
             </motion.div>
