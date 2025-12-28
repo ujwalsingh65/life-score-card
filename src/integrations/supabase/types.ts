@@ -119,6 +119,8 @@ export type Database = {
           display_name: string | null
           id: string
           onesignal_player_id: string | null
+          selected_avatar_id: string | null
+          selected_title_id: string | null
           updated_at: string
         }
         Insert: {
@@ -127,6 +129,8 @@ export type Database = {
           display_name?: string | null
           id: string
           onesignal_player_id?: string | null
+          selected_avatar_id?: string | null
+          selected_title_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -135,6 +139,8 @@ export type Database = {
           display_name?: string | null
           id?: string
           onesignal_player_id?: string | null
+          selected_avatar_id?: string | null
+          selected_title_id?: string | null
           updated_at?: string
         }
         Relationships: []
