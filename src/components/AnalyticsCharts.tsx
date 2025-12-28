@@ -20,10 +20,14 @@ import { Habit, HabitLog } from "@/types/habit";
 interface AnalyticsChartsProps {
   habits: Habit[];
   logs: HabitLog[];
-  isCompleted: (habitId: string, date: string) => boolean;
 }
 
-export function AnalyticsCharts({ habits, logs, isCompleted }: AnalyticsChartsProps) {
+export function AnalyticsCharts({ habits, logs }: AnalyticsChartsProps) {
+  // Helper to check completion from logs
+  const checkCompleted = (habitId: string, date: string): boolean => {
+    return logs.some(l => l.habitId === habitId && l.date === date && l.completed);
+  };
+
   // Calculate weekly data from actual logs
   const weeklyData = useMemo(() => {
     const weekStart = new Date();
@@ -39,7 +43,7 @@ export function AnalyticsCharts({ habits, logs, isCompleted }: AnalyticsChartsPr
       const dayOfWeek = date.getDay();
       
       const habitsForDay = habits.filter(h => h.targetDays.includes(dayOfWeek));
-      const completed = habitsForDay.filter(h => isCompleted(h.id, dateStr)).length;
+      const completed = habitsForDay.filter(h => checkCompleted(h.id, dateStr)).length;
       const total = habitsForDay.length;
       const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
       
@@ -47,7 +51,7 @@ export function AnalyticsCharts({ habits, logs, isCompleted }: AnalyticsChartsPr
     }
     
     return result;
-  }, [habits, isCompleted]);
+  }, [habits, logs]);
 
   // Calculate category stats from actual habits
   const categoryData = useMemo(() => {
@@ -74,7 +78,7 @@ export function AnalyticsCharts({ habits, logs, isCompleted }: AnalyticsChartsPr
         const dayOfWeek = date.getDay();
         
         if (habit.targetDays.includes(dayOfWeek)) {
-          if (isCompleted(habit.id, dateStr)) {
+          if (checkCompleted(habit.id, dateStr)) {
             completed++;
           } else if (date <= new Date()) {
             missed++;
@@ -84,7 +88,7 @@ export function AnalyticsCharts({ habits, logs, isCompleted }: AnalyticsChartsPr
       
       return { name: habit.name, completed, missed };
     });
-  }, [habits, isCompleted]);
+  }, [habits, logs]);
 
   // Solo Leveling blue-purple palette
   const COLORS = [
