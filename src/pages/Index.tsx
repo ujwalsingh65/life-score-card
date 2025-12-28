@@ -430,7 +430,6 @@ export default function Index() {
               <WeeklyView
                 habits={habits}
                 isCompleted={isCompleted}
-                onToggle={toggleHabitLog}
               />
             </motion.div>
           </TabsContent>
