@@ -15,6 +15,7 @@ import { PlayerLevel } from "@/components/PlayerLevel";
 import { AchievementsPanel } from "@/components/AchievementsPanel";
 import { RankProgressionDisplay } from "@/components/RankProgressionDisplay";
 import { QuestChallenges, QUEST_REWARDS } from "@/components/QuestChallenges";
+import { MonthlyChallenges } from "@/components/MonthlyChallenges";
 import { AchievementToast } from "@/components/AchievementToast";
 import { LevelUpOverlay } from "@/components/LevelUpOverlay";
 import { NotificationToggle } from "@/components/NotificationToggle";
@@ -65,10 +66,14 @@ export default function Index() {
   const [levelUpData, setLevelUpData] = useState({ level: 1, rank: "E-Rank Hunter" });
   const [dailyQuestClaimed, setDailyQuestClaimed] = useState(false);
   const [weeklyQuestClaimed, setWeeklyQuestClaimed] = useState(false);
+  const [claimedMonthlyChallenges, setClaimedMonthlyChallenges] = useState<string[]>([]);
 
-  // Reset quest claims at midnight
+  // Reset quest claims at midnight / weekly / monthly
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    
+    // Daily reset
     const storedDate = localStorage.getItem("quest-claim-date");
     if (storedDate !== today) {
       setDailyQuestClaimed(false);
@@ -77,7 +82,7 @@ export default function Index() {
       setDailyQuestClaimed(localStorage.getItem("daily-quest-claimed") === "true");
     }
     
-    // Check weekly reset (Sunday)
+    // Weekly reset (Sunday)
     const currentWeek = getWeekNumber(new Date());
     const storedWeek = localStorage.getItem("quest-claim-week");
     if (storedWeek !== currentWeek.toString()) {
@@ -85,6 +90,17 @@ export default function Index() {
       localStorage.setItem("quest-claim-week", currentWeek.toString());
     } else {
       setWeeklyQuestClaimed(localStorage.getItem("weekly-quest-claimed") === "true");
+    }
+    
+    // Monthly claims - load from localStorage
+    const storedMonth = localStorage.getItem("quest-claim-month");
+    if (storedMonth !== currentMonth) {
+      setClaimedMonthlyChallenges([]);
+      localStorage.setItem("quest-claim-month", currentMonth);
+      localStorage.setItem("monthly-challenges-claimed", "[]");
+    } else {
+      const claimed = localStorage.getItem("monthly-challenges-claimed");
+      setClaimedMonthlyChallenges(claimed ? JSON.parse(claimed) : []);
     }
   }, []);
 
@@ -293,6 +309,35 @@ export default function Index() {
     if (xpGained > 0) {
       setWeeklyQuestClaimed(true);
       localStorage.setItem("weekly-quest-claimed", "true");
+      
+      const newStats = calculatePlayerStats(totalXP + xpGained);
+      setPlayerStats(newStats);
+      setXpGain(xpGained);
+      playAchievement();
+      
+      if (newStats.level > previousLevel) {
+        setTimeout(() => {
+          setLevelUpData({ level: newStats.level, rank: newStats.rank });
+          setShowLevelUp(true);
+          playLevelUp();
+        }, 300);
+      }
+      
+      setTimeout(() => setXpGain(0), 2000);
+    }
+  };
+
+  // Claim monthly challenge reward
+  const handleClaimMonthlyChallenge = async (challengeId: string, xpReward: number) => {
+    if (claimedMonthlyChallenges.includes(challengeId)) return;
+    
+    const previousLevel = playerStats.level;
+    const { xpGained } = await updateXP(xpReward);
+    
+    if (xpGained > 0) {
+      const newClaimed = [...claimedMonthlyChallenges, challengeId];
+      setClaimedMonthlyChallenges(newClaimed);
+      localStorage.setItem("monthly-challenges-claimed", JSON.stringify(newClaimed));
       
       const newStats = calculatePlayerStats(totalXP + xpGained);
       setPlayerStats(newStats);
@@ -548,6 +593,23 @@ export default function Index() {
           <TabsContent value="analytics">
             <div className="space-y-6">
               <AnalyticsCharts habits={habits} logs={logs} />
+              
+              {/* Monthly Challenges */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="rounded-lg border border-primary/20 bg-card p-6 shadow-system"
+              >
+                <MonthlyChallenges
+                  habits={habits}
+                  logs={logs}
+                  onClaimChallenge={handleClaimMonthlyChallenge}
+                  claimedChallenges={claimedMonthlyChallenges}
+                  remainingDailyXP={getRemainingDailyXP()}
+                />
+              </motion.div>
+              
               <RankProgressionDisplay stats={playerStats} />
             </div>
           </TabsContent>
