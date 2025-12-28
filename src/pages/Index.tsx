@@ -15,6 +15,7 @@ import { PlayerLevel } from "@/components/PlayerLevel";
 import { AchievementsPanel } from "@/components/AchievementsPanel";
 import { AchievementToast } from "@/components/AchievementToast";
 import { LevelUpOverlay } from "@/components/LevelUpOverlay";
+import { NotificationToggle } from "@/components/NotificationToggle";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -245,6 +246,7 @@ export default function Index() {
             </div>
             <div className="flex items-center gap-2">
               <AddHabitDialog onAdd={handleAddHabit} />
+              <NotificationToggle />
               <Button
                 variant="ghost"
                 size="icon"

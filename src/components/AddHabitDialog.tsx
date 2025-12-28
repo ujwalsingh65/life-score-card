@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { Plus, Bell, BellOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,8 @@ export function AddHabitDialog({ onAdd, children }: AddHabitDialogProps) {
   const [category, setCategory] = useState<HabitCategory>("health");
   const [icon, setIcon] = useState("🎯");
   const [targetDays, setTargetDays] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderTime, setReminderTime] = useState("09:00");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,12 +41,15 @@ export function AddHabitDialog({ onAdd, children }: AddHabitDialogProps) {
       icon,
       color: CATEGORY_CONFIG[category].color,
       targetDays,
+      reminderTime: reminderEnabled ? reminderTime : null,
     });
 
     setName("");
     setCategory("health");
     setIcon("🎯");
     setTargetDays([0, 1, 2, 3, 4, 5, 6]);
+    setReminderEnabled(false);
+    setReminderTime("09:00");
     setOpen(false);
   };
 
@@ -63,7 +69,7 @@ export function AddHabitDialog({ onAdd, children }: AddHabitDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">Create New Habit</DialogTitle>
         </DialogHeader>
@@ -149,6 +155,48 @@ export function AddHabitDialog({ onAdd, children }: AddHabitDialogProps) {
                 </motion.button>
               ))}
             </div>
+          </div>
+
+          {/* Reminder Settings */}
+          <div className="space-y-3 rounded-lg border border-border p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {reminderEnabled ? (
+                  <Bell className="h-4 w-4 text-primary" />
+                ) : (
+                  <BellOff className="h-4 w-4 text-muted-foreground" />
+                )}
+                <Label htmlFor="reminder-toggle" className="cursor-pointer">
+                  Daily Reminder
+                </Label>
+              </div>
+              <Switch
+                id="reminder-toggle"
+                checked={reminderEnabled}
+                onCheckedChange={setReminderEnabled}
+              />
+            </div>
+            
+            {reminderEnabled && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-2"
+              >
+                <Label htmlFor="reminder-time">Reminder Time</Label>
+                <Input
+                  id="reminder-time"
+                  type="time"
+                  value={reminderTime}
+                  onChange={(e) => setReminderTime(e.target.value)}
+                  className="h-12"
+                />
+                <p className="text-xs text-muted-foreground">
+                  You'll receive a push notification at this time on scheduled days
+                </p>
+              </motion.div>
+            )}
           </div>
 
           {/* Submit */}
