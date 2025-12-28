@@ -27,21 +27,22 @@ export function AnalyticsCharts({ habits }: AnalyticsChartsProps) {
   const categoryData = useMemo(() => getCategoryStats(), [habits]);
   const habitCompletionData = useMemo(() => getHabitCompletionData(), [habits]);
 
+  // Solo Leveling blue-purple palette
   const COLORS = [
-    "hsl(210, 100%, 50%)",
-    "hsl(190, 95%, 45%)",
-    "hsl(150, 80%, 45%)",
-    "hsl(45, 100%, 50%)",
-    "hsl(280, 80%, 55%)",
-    "hsl(340, 80%, 55%)",
+    "hsl(215, 100%, 55%)",  // Electric blue
+    "hsl(195, 100%, 50%)",  // Cyan
+    "hsl(175, 90%, 45%)",   // Teal
+    "hsl(260, 85%, 60%)",   // Purple
+    "hsl(235, 80%, 55%)",   // Indigo
+    "hsl(280, 75%, 55%)",   // Violet
   ];
 
   const customTooltipStyle = {
-    backgroundColor: "hsl(222, 47%, 10%)",
-    border: "1px solid hsl(215, 30%, 25%)",
+    backgroundColor: "hsl(225, 35%, 8%)",
+    border: "1px solid hsl(215, 100%, 55%)",
     borderRadius: "8px",
     padding: "12px",
-    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.5)",
+    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px hsla(215, 100%, 55%, 0.2)",
   };
 
   return (
@@ -51,7 +52,7 @@ export function AnalyticsCharts({ habits }: AnalyticsChartsProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="rounded-lg border border-primary/20 bg-card p-6 shadow-system"
+        className="rounded-lg border border-primary/30 bg-card p-6 shadow-system"
       >
         <h3 className="font-display text-lg font-semibold text-primary mb-4 text-glow">
           WEEKLY PROGRESS
@@ -59,15 +60,15 @@ export function AnalyticsCharts({ habits }: AnalyticsChartsProps) {
         <div className="h-[250px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={weeklyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 30%, 18%)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 30%, 15%)" />
               <XAxis
                 dataKey="day"
-                stroke="hsl(215, 20%, 55%)"
+                stroke="hsl(215, 25%, 50%)"
                 fontSize={12}
                 fontFamily="Rajdhani"
               />
               <YAxis
-                stroke="hsl(215, 20%, 55%)"
+                stroke="hsl(215, 25%, 50%)"
                 fontSize={12}
                 fontFamily="Rajdhani"
                 domain={[0, 100]}
@@ -75,18 +76,18 @@ export function AnalyticsCharts({ habits }: AnalyticsChartsProps) {
               />
               <Tooltip
                 contentStyle={customTooltipStyle}
-                labelStyle={{ color: "hsl(210, 100%, 50%)", fontFamily: "Orbitron" }}
-                itemStyle={{ color: "hsl(210, 40%, 98%)" }}
+                labelStyle={{ color: "hsl(215, 100%, 55%)", fontFamily: "Orbitron" }}
+                itemStyle={{ color: "hsl(210, 50%, 95%)" }}
                 formatter={(value: number) => [`${value}%`, "Completion"]}
               />
               <Line
                 type="monotone"
                 dataKey="percentage"
-                stroke="hsl(210, 100%, 50%)"
+                stroke="hsl(215, 100%, 55%)"
                 strokeWidth={3}
-                dot={{ fill: "hsl(210, 100%, 50%)", strokeWidth: 2, r: 5 }}
-                activeDot={{ r: 8, fill: "hsl(190, 95%, 45%)" }}
-                filter="drop-shadow(0 0 8px hsl(210, 100%, 50%))"
+                dot={{ fill: "hsl(215, 100%, 55%)", strokeWidth: 2, r: 5, stroke: "hsl(225, 30%, 3%)" }}
+                activeDot={{ r: 8, fill: "hsl(195, 100%, 50%)", stroke: "hsl(215, 100%, 55%)", strokeWidth: 2 }}
+                filter="drop-shadow(0 0 8px hsl(215, 100%, 55%))"
               />
             </LineChart>
           </ResponsiveContainer>
@@ -98,7 +99,7 @@ export function AnalyticsCharts({ habits }: AnalyticsChartsProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="rounded-lg border border-primary/20 bg-card p-6 shadow-system"
+        className="rounded-lg border border-primary/30 bg-card p-6 shadow-system"
       >
         <h3 className="font-display text-lg font-semibold text-primary mb-4 text-glow">
           QUEST CATEGORIES
@@ -107,6 +108,17 @@ export function AnalyticsCharts({ habits }: AnalyticsChartsProps) {
           {categoryData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
+                <defs>
+                  {COLORS.map((color, index) => (
+                    <filter key={`glow-${index}`} id={`pieGlow-${index}`} x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                      <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                  ))}
+                </defs>
                 <Pie
                   data={categoryData}
                   cx="50%"
@@ -120,20 +132,21 @@ export function AnalyticsCharts({ habits }: AnalyticsChartsProps) {
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
-                      stroke="hsl(222, 47%, 8%)"
+                      stroke="hsl(225, 30%, 3%)"
                       strokeWidth={2}
+                      style={{ filter: `drop-shadow(0 0 6px ${COLORS[index % COLORS.length]})` }}
                     />
                   ))}
                 </Pie>
                 <Tooltip
                   contentStyle={customTooltipStyle}
-                  labelStyle={{ color: "hsl(210, 100%, 50%)", fontFamily: "Orbitron" }}
-                  itemStyle={{ color: "hsl(210, 40%, 98%)" }}
+                  labelStyle={{ color: "hsl(215, 100%, 55%)", fontFamily: "Orbitron" }}
+                  itemStyle={{ color: "hsl(210, 50%, 95%)" }}
                 />
                 <Legend
                   wrapperStyle={{ fontFamily: "Rajdhani", fontSize: "14px" }}
                   formatter={(value) => (
-                    <span style={{ color: "hsl(210, 40%, 98%)" }}>{value}</span>
+                    <span style={{ color: "hsl(210, 50%, 95%)" }}>{value}</span>
                   )}
                 />
               </PieChart>
@@ -149,7 +162,7 @@ export function AnalyticsCharts({ habits }: AnalyticsChartsProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="rounded-lg border border-primary/20 bg-card p-6 shadow-system lg:col-span-2"
+        className="rounded-lg border border-primary/30 bg-card p-6 shadow-system lg:col-span-2"
       >
         <h3 className="font-display text-lg font-semibold text-primary mb-4 text-glow">
           QUEST COMPLETION STATUS
@@ -158,17 +171,17 @@ export function AnalyticsCharts({ habits }: AnalyticsChartsProps) {
           {habitCompletionData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={habitCompletionData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 30%, 18%)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 30%, 15%)" />
                 <XAxis
                   type="number"
-                  stroke="hsl(215, 20%, 55%)"
+                  stroke="hsl(215, 25%, 50%)"
                   fontSize={12}
                   fontFamily="Rajdhani"
                 />
                 <YAxis
                   type="category"
                   dataKey="name"
-                  stroke="hsl(215, 20%, 55%)"
+                  stroke="hsl(215, 25%, 50%)"
                   fontSize={12}
                   fontFamily="Rajdhani"
                   width={120}
@@ -176,26 +189,28 @@ export function AnalyticsCharts({ habits }: AnalyticsChartsProps) {
                 />
                 <Tooltip
                   contentStyle={customTooltipStyle}
-                  labelStyle={{ color: "hsl(210, 100%, 50%)", fontFamily: "Orbitron" }}
-                  itemStyle={{ color: "hsl(210, 40%, 98%)" }}
+                  labelStyle={{ color: "hsl(215, 100%, 55%)", fontFamily: "Orbitron" }}
+                  itemStyle={{ color: "hsl(210, 50%, 95%)" }}
                 />
                 <Legend
                   wrapperStyle={{ fontFamily: "Rajdhani", fontSize: "14px" }}
                   formatter={(value) => (
-                    <span style={{ color: "hsl(210, 40%, 98%)" }}>{value}</span>
+                    <span style={{ color: "hsl(210, 50%, 95%)" }}>{value}</span>
                   )}
                 />
                 <Bar
                   dataKey="completed"
                   name="Completed"
-                  fill="hsl(150, 80%, 45%)"
+                  fill="hsl(175, 90%, 45%)"
                   radius={[0, 4, 4, 0]}
+                  style={{ filter: "drop-shadow(0 0 4px hsl(175, 90%, 45%))" }}
                 />
                 <Bar
                   dataKey="missed"
                   name="Missed"
-                  fill="hsl(0, 80%, 50%)"
+                  fill="hsl(0, 85%, 55%)"
                   radius={[0, 4, 4, 0]}
+                  style={{ filter: "drop-shadow(0 0 4px hsl(0, 85%, 55%))" }}
                 />
               </BarChart>
             </ResponsiveContainer>

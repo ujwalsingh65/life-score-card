@@ -2,84 +2,85 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Solo Leveling System - Dark Blue Gaming Aesthetic */
+/* Solo Leveling System - Deep Black & Electric Blue Aesthetic */
 
 @layer base {
   :root {
-    /* Deep black background with blue undertones */
-    --background: 222 47% 5%;
-    --foreground: 210 40% 98%;
+    /* True black background with subtle blue undertones */
+    --background: 225 30% 3%;
+    --foreground: 210 50% 95%;
 
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 225 35% 6%;
+    --card-foreground: 210 50% 95%;
 
-    --popover: 222 47% 10%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 225 35% 8%;
+    --popover-foreground: 210 50% 95%;
 
-    /* Electric Blue primary */
-    --primary: 210 100% 50%;
-    --primary-foreground: 222 47% 5%;
+    /* Electric Blue primary - Solo Leveling signature */
+    --primary: 215 100% 55%;
+    --primary-foreground: 225 30% 3%;
 
-    --secondary: 222 30% 15%;
-    --secondary-foreground: 210 40% 90%;
+    --secondary: 225 25% 12%;
+    --secondary-foreground: 210 50% 90%;
 
-    --muted: 222 30% 12%;
-    --muted-foreground: 215 20% 55%;
+    --muted: 225 25% 10%;
+    --muted-foreground: 215 25% 50%;
 
     /* Cyan accent for highlights */
-    --accent: 190 95% 45%;
-    --accent-foreground: 222 47% 5%;
+    --accent: 195 100% 50%;
+    --accent-foreground: 225 30% 3%;
 
-    /* Success - Electric green */
-    --success: 150 80% 45%;
-    --success-foreground: 222 47% 5%;
+    /* Success - Neon blue-green */
+    --success: 175 90% 45%;
+    --success-foreground: 225 30% 3%;
 
-    /* Warning - Amber glow */
-    --warning: 45 100% 50%;
-    --warning-foreground: 222 47% 5%;
+    /* Warning - Electric amber */
+    --warning: 40 100% 55%;
+    --warning-foreground: 225 30% 3%;
 
-    --destructive: 0 80% 50%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 85% 55%;
+    --destructive-foreground: 210 50% 95%;
 
-    --border: 215 30% 18%;
-    --input: 215 30% 18%;
-    --ring: 210 100% 50%;
+    --border: 215 30% 15%;
+    --input: 215 30% 12%;
+    --ring: 215 100% 55%;
 
     --radius: 0.5rem;
 
-    --chart-1: 210 100% 50%;
-    --chart-2: 190 95% 45%;
-    --chart-3: 150 80% 45%;
-    --chart-4: 45 100% 50%;
-    --chart-5: 280 80% 55%;
+    /* Chart colors - Solo Leveling palette */
+    --chart-1: 215 100% 55%;
+    --chart-2: 195 100% 50%;
+    --chart-3: 175 90% 45%;
+    --chart-4: 260 85% 60%;
+    --chart-5: 40 100% 55%;
 
-    --sidebar-background: 222 47% 6%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 210 100% 50%;
-    --sidebar-primary-foreground: 222 47% 5%;
-    --sidebar-accent: 222 30% 12%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 215 30% 15%;
-    --sidebar-ring: 210 100% 50%;
+    --sidebar-background: 225 30% 4%;
+    --sidebar-foreground: 210 50% 95%;
+    --sidebar-primary: 215 100% 55%;
+    --sidebar-primary-foreground: 225 30% 3%;
+    --sidebar-accent: 225 25% 10%;
+    --sidebar-accent-foreground: 210 50% 95%;
+    --sidebar-border: 215 30% 12%;
+    --sidebar-ring: 215 100% 55%;
   }
 
   .dark {
-    --background: 222 47% 4%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 7%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 100% 55%;
-    --primary-foreground: 222 47% 5%;
-    --secondary: 222 30% 12%;
-    --secondary-foreground: 210 40% 90%;
-    --muted: 222 30% 10%;
-    --muted-foreground: 215 20% 50%;
-    --accent: 190 95% 50%;
-    --accent-foreground: 222 47% 5%;
-    --border: 215 30% 15%;
-    --input: 215 30% 15%;
+    --background: 225 30% 2%;
+    --foreground: 210 50% 95%;
+    --card: 225 35% 5%;
+    --card-foreground: 210 50% 95%;
+    --popover: 225 35% 7%;
+    --popover-foreground: 210 50% 95%;
+    --primary: 215 100% 60%;
+    --primary-foreground: 225 30% 3%;
+    --secondary: 225 25% 10%;
+    --secondary-foreground: 210 50% 90%;
+    --muted: 225 25% 8%;
+    --muted-foreground: 215 25% 45%;
+    --accent: 195 100% 55%;
+    --accent-foreground: 225 30% 3%;
+    --border: 215 30% 12%;
+    --input: 215 30% 10%;
   }
 }
 
@@ -128,11 +129,11 @@
 @keyframes streak-pulse {
   0%, 100% { 
     transform: scale(1);
-    filter: drop-shadow(0 0 4px hsl(45 100% 50% / 0.6));
+    filter: drop-shadow(0 0 4px hsl(215 100% 55% / 0.6));
   }
   50% { 
     transform: scale(1.1);
-    filter: drop-shadow(0 0 8px hsl(45 100% 50% / 0.8));
+    filter: drop-shadow(0 0 12px hsl(215 100% 55% / 0.9));
   }
 }
 
