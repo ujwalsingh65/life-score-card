@@ -11,8 +11,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
   Legend,
 } from "recharts";
 import { Habit, HabitLog } from "@/types/habit";
@@ -61,34 +59,6 @@ export function AnalyticsCharts({ habits, logs }: AnalyticsChartsProps) {
     });
     return Object.entries(categoryMap).map(([name, value]) => ({ name, value }));
   }, [habits]);
-
-  // Calculate habit completion data from actual logs
-  const habitCompletionData = useMemo(() => {
-    const weekStart = new Date();
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-    
-    return habits.map(habit => {
-      let completed = 0;
-      let missed = 0;
-      
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(weekStart);
-        date.setDate(date.getDate() + i);
-        const dateStr = date.toISOString().split("T")[0];
-        const dayOfWeek = date.getDay();
-        
-        if (habit.targetDays.includes(dayOfWeek)) {
-          if (checkCompleted(habit.id, dateStr)) {
-            completed++;
-          } else if (date <= new Date()) {
-            missed++;
-          }
-        }
-      }
-      
-      return { name: habit.name, completed, missed };
-    });
-  }, [habits, logs]);
 
   // Solo Leveling blue-purple palette
   const COLORS = [
@@ -216,69 +186,6 @@ export function AnalyticsCharts({ habits, logs }: AnalyticsChartsProps) {
             </ResponsiveContainer>
           ) : (
             <p className="text-muted-foreground text-center">No quests to display</p>
-          )}
-        </div>
-      </motion.div>
-
-      {/* Habit Completion Bar Chart */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="rounded-lg border border-primary/30 bg-card p-6 shadow-system lg:col-span-2"
-      >
-        <h3 className="font-display text-lg font-semibold text-primary mb-4 text-glow">
-          QUEST COMPLETION STATUS
-        </h3>
-        <div className="h-[250px]">
-          {habitCompletionData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={habitCompletionData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 30%, 15%)" />
-                <XAxis
-                  type="number"
-                  stroke="hsl(215, 25%, 50%)"
-                  fontSize={12}
-                  fontFamily="Rajdhani"
-                />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  stroke="hsl(215, 25%, 50%)"
-                  fontSize={12}
-                  fontFamily="Rajdhani"
-                  width={120}
-                  tickFormatter={(value) => value.length > 15 ? `${value.slice(0, 15)}...` : value}
-                />
-                <Tooltip
-                  contentStyle={customTooltipStyle}
-                  labelStyle={{ color: "hsl(215, 100%, 55%)", fontFamily: "Orbitron" }}
-                  itemStyle={{ color: "hsl(210, 50%, 95%)" }}
-                />
-                <Legend
-                  wrapperStyle={{ fontFamily: "Rajdhani", fontSize: "14px" }}
-                  formatter={(value) => (
-                    <span style={{ color: "hsl(210, 50%, 95%)" }}>{value}</span>
-                  )}
-                />
-                <Bar
-                  dataKey="completed"
-                  name="Completed"
-                  fill="hsl(175, 90%, 45%)"
-                  radius={[0, 4, 4, 0]}
-                  style={{ filter: "drop-shadow(0 0 4px hsl(175, 90%, 45%))" }}
-                />
-                <Bar
-                  dataKey="missed"
-                  name="Missed"
-                  fill="hsl(0, 85%, 55%)"
-                  radius={[0, 4, 4, 0]}
-                  style={{ filter: "drop-shadow(0 0 4px hsl(0, 85%, 55%))" }}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-muted-foreground text-center py-20">No quest data to display</p>
           )}
         </div>
       </motion.div>
