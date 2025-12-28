@@ -14,6 +14,7 @@ import { AnalyticsCharts } from "@/components/AnalyticsCharts";
 import { PlayerLevel } from "@/components/PlayerLevel";
 import { AchievementsPanel } from "@/components/AchievementsPanel";
 import { RankProgressionDisplay } from "@/components/RankProgressionDisplay";
+import { QuestChallenges, QUEST_REWARDS } from "@/components/QuestChallenges";
 import { AchievementToast } from "@/components/AchievementToast";
 import { LevelUpOverlay } from "@/components/LevelUpOverlay";
 import { NotificationToggle } from "@/components/NotificationToggle";
@@ -62,6 +63,38 @@ export default function Index() {
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [levelUpData, setLevelUpData] = useState({ level: 1, rank: "E-Rank Hunter" });
+  const [dailyQuestClaimed, setDailyQuestClaimed] = useState(false);
+  const [weeklyQuestClaimed, setWeeklyQuestClaimed] = useState(false);
+
+  // Reset quest claims at midnight
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    const storedDate = localStorage.getItem("quest-claim-date");
+    if (storedDate !== today) {
+      setDailyQuestClaimed(false);
+      localStorage.setItem("quest-claim-date", today);
+    } else {
+      setDailyQuestClaimed(localStorage.getItem("daily-quest-claimed") === "true");
+    }
+    
+    // Check weekly reset (Sunday)
+    const currentWeek = getWeekNumber(new Date());
+    const storedWeek = localStorage.getItem("quest-claim-week");
+    if (storedWeek !== currentWeek.toString()) {
+      setWeeklyQuestClaimed(false);
+      localStorage.setItem("quest-claim-week", currentWeek.toString());
+    } else {
+      setWeeklyQuestClaimed(localStorage.getItem("weekly-quest-claimed") === "true");
+    }
+  }, []);
+
+  function getWeekNumber(date: Date): number {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  }
 
   // Update player stats when XP changes
   useEffect(() => {
@@ -220,6 +253,62 @@ export default function Index() {
     await addHabit(habit);
     playXPGain();
     setTimeout(() => checkAchievements(), 300);
+  };
+
+  // Claim daily quest reward
+  const handleClaimDailyQuest = async () => {
+    if (dailyQuestClaimed) return;
+    
+    const previousLevel = playerStats.level;
+    const { xpGained } = await updateXP(QUEST_REWARDS.DAILY_COMPLETE);
+    
+    if (xpGained > 0) {
+      setDailyQuestClaimed(true);
+      localStorage.setItem("daily-quest-claimed", "true");
+      
+      const newStats = calculatePlayerStats(totalXP + xpGained);
+      setPlayerStats(newStats);
+      setXpGain(xpGained);
+      playAchievement();
+      
+      if (newStats.level > previousLevel) {
+        setTimeout(() => {
+          setLevelUpData({ level: newStats.level, rank: newStats.rank });
+          setShowLevelUp(true);
+          playLevelUp();
+        }, 300);
+      }
+      
+      setTimeout(() => setXpGain(0), 2000);
+    }
+  };
+
+  // Claim weekly quest reward
+  const handleClaimWeeklyQuest = async () => {
+    if (weeklyQuestClaimed) return;
+    
+    const previousLevel = playerStats.level;
+    const { xpGained } = await updateXP(QUEST_REWARDS.WEEKLY_COMPLETE);
+    
+    if (xpGained > 0) {
+      setWeeklyQuestClaimed(true);
+      localStorage.setItem("weekly-quest-claimed", "true");
+      
+      const newStats = calculatePlayerStats(totalXP + xpGained);
+      setPlayerStats(newStats);
+      setXpGain(xpGained);
+      playAchievement();
+      
+      if (newStats.level > previousLevel) {
+        setTimeout(() => {
+          setLevelUpData({ level: newStats.level, rank: newStats.rank });
+          setShowLevelUp(true);
+          playLevelUp();
+        }, 300);
+      }
+      
+      setTimeout(() => setXpGain(0), 2000);
+    }
   };
 
   const handleSignOut = async () => {
@@ -417,6 +506,27 @@ export default function Index() {
                 </AnimatePresence>
               </div>
             </div>
+
+            {/* Quest Challenges */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="rounded-lg border border-primary/20 bg-card p-6 shadow-system"
+            >
+              <QuestChallenges
+                habits={habits}
+                todayCompleted={todayStats.completed}
+                todayTotal={todayStats.total}
+                weeklyCompleted={weeklyStats.completed}
+                weeklyTotal={weeklyStats.total}
+                onClaimDaily={handleClaimDailyQuest}
+                onClaimWeekly={handleClaimWeeklyQuest}
+                dailyClaimed={dailyQuestClaimed}
+                weeklyClaimed={weeklyQuestClaimed}
+                remainingDailyXP={getRemainingDailyXP()}
+              />
+            </motion.div>
           </TabsContent>
 
           {/* Week Tab */}
