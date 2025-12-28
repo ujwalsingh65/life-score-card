@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, User, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera, User, Save, Loader2, Shield, Zap, Trophy, Swords } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ProfileCustomization } from "@/components/ProfileCustomization";
 import { calculatePlayerStats } from "@/lib/xp";
 import { getAvatarById, getTitleById } from "@/lib/customization";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -39,7 +40,6 @@ export default function Profile() {
     }
 
     const fetchProfile = async () => {
-      // Fetch profile data
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("display_name, avatar_url, selected_avatar_id, selected_title_id")
@@ -55,7 +55,6 @@ export default function Profile() {
         setSelectedTitleId(profileData.selected_title_id || "novice");
       }
 
-      // Fetch player stats for level
       const { data: statsData, error: statsError } = await supabase
         .from("player_stats")
         .select("total_xp")
@@ -220,176 +219,270 @@ export default function Profile() {
   const selectedTitle = getTitleById(selectedTitleId);
   const AvatarIcon = selectedAvatar?.icon || User;
 
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-primary/20">
-        <div className="container max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/")}
-            className="shrink-0"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-xl font-bold font-display text-primary">HUNTER PROFILE</h1>
-        </div>
-      </header>
+  const getRankColor = (rank: string) => {
+    if (rank.includes("S-Rank")) return "hsl(45, 100%, 50%)";
+    if (rank.includes("A-Rank")) return "hsl(280, 100%, 60%)";
+    if (rank.includes("B-Rank")) return "hsl(215, 100%, 55%)";
+    if (rank.includes("C-Rank")) return "hsl(175, 90%, 45%)";
+    if (rank.includes("D-Rank")) return "hsl(120, 60%, 45%)";
+    return "hsl(215, 25%, 50%)";
+  };
 
-      <main className="container max-w-2xl mx-auto px-4 py-8 space-y-6">
-        {/* Profile Preview */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <Card className="border-primary/20 bg-card">
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center gap-4">
-                {/* Avatar Display */}
-                <div className="relative">
-                  {avatarUrl ? (
-                    <Avatar className="h-24 w-24 border-4" style={{ borderColor: selectedAvatar?.color || "hsl(var(--primary))" }}>
-                      <AvatarImage src={avatarUrl} />
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        <User className="h-10 w-10" />
-                      </AvatarFallback>
-                    </Avatar>
-                  ) : (
-                    <div
-                      className="h-24 w-24 rounded-full flex items-center justify-center border-4"
+  const rankColor = getRankColor(playerStats.rank);
+
+  return (
+    <div className="min-h-screen bg-background p-4 md:p-6">
+      <div className="system-border rounded-lg bg-card min-h-[calc(100vh-3rem)]">
+        <div className="system-border-glow top-left" />
+        <div className="system-border-glow top-right" />
+        <div className="system-border-glow bottom-left" />
+        <div className="system-border-glow bottom-right" />
+
+        <header className="border-b-2 border-primary/30 bg-card sticky top-0 z-50 rounded-t-lg">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-neon animate-pulse-glow">
+                  <Shield className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <div>
+                  <h1 className="font-display text-xl font-bold text-primary text-glow">HUNTER PROFILE</h1>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Status Window</p>
+                </div>
+              </div>
+              <ThemeToggle />
+            </div>
+          </div>
+        </header>
+
+        <main className="container max-w-4xl mx-auto px-4 py-8 space-y-6">
+          {/* Hunter Status Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="relative rounded-lg border-2 border-primary/50 bg-card overflow-hidden shadow-neon">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" />
+              
+              <div className="relative border-b border-primary/30 bg-secondary/30 px-6 py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-primary animate-pulse" />
+                    <span className="font-display text-sm font-bold text-primary tracking-wider">HUNTER STATUS</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground font-mono">ID: {user?.id?.slice(0, 8).toUpperCase()}</span>
+                </div>
+              </div>
+
+              <div className="relative p-6">
+                <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+                  <div className="relative flex-shrink-0">
+                    <div 
+                      className="relative rounded-lg p-1"
                       style={{ 
-                        backgroundColor: selectedAvatar?.bgColor || "hsl(var(--secondary))",
-                        borderColor: selectedAvatar?.color || "hsl(var(--primary))",
-                        boxShadow: `0 0 20px ${selectedAvatar?.color || "hsl(var(--primary))"}40`
+                        background: `linear-gradient(135deg, ${rankColor}, ${selectedAvatar?.color || "hsl(var(--primary))"})`,
+                        boxShadow: `0 0 30px ${rankColor}50`
                       }}
                     >
-                      <AvatarIcon className="h-12 w-12" style={{ color: selectedAvatar?.color }} />
+                      {avatarUrl ? (
+                        <Avatar className="h-32 w-32 rounded-lg">
+                          <AvatarImage src={avatarUrl} className="rounded-lg" />
+                          <AvatarFallback className="bg-secondary rounded-lg">
+                            <User className="h-14 w-14 text-muted-foreground" />
+                          </AvatarFallback>
+                        </Avatar>
+                      ) : (
+                        <div
+                          className="h-32 w-32 rounded-lg flex items-center justify-center"
+                          style={{ backgroundColor: selectedAvatar?.bgColor || "hsl(var(--secondary))" }}
+                        >
+                          <AvatarIcon className="h-16 w-16" style={{ color: selectedAvatar?.color }} />
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <button
-                    onClick={handleAvatarClick}
-                    disabled={isUploading}
-                    className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
-                  >
-                    {isUploading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Camera className="h-4 w-4" />
-                    )}
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
+                    <button
+                      onClick={handleAvatarClick}
+                      disabled={isUploading}
+                      className="absolute -bottom-2 -right-2 p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    >
+                      {isUploading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Camera className="h-4 w-4" />
+                      )}
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </div>
+
+                  <div className="flex-1 w-full space-y-4">
+                    <div className="space-y-1">
+                      <span className="text-xs text-muted-foreground font-display tracking-wider">NAME</span>
+                      <h2 className="text-2xl md:text-3xl font-bold font-display text-foreground">
+                        {displayName || "Anonymous Hunter"}
+                      </h2>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="rounded-lg border border-primary/20 bg-secondary/30 p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Trophy className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground font-display tracking-wider">TITLE</span>
+                        </div>
+                        <p 
+                          className="font-bold font-display text-sm truncate"
+                          style={{ color: selectedTitle?.color }}
+                        >
+                          {selectedTitle?.title || "Novice Hunter"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg border border-primary/20 bg-secondary/30 p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Zap className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground font-display tracking-wider">LEVEL</span>
+                        </div>
+                        <p className="font-bold font-display text-2xl text-primary text-glow">
+                          {playerStats.level}
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg border border-primary/20 bg-secondary/30 p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Shield className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground font-display tracking-wider">RANK</span>
+                        </div>
+                        <p 
+                          className="font-bold font-display text-sm"
+                          style={{ color: rankColor, textShadow: `0 0 10px ${rankColor}50` }}
+                        >
+                          {playerStats.rank}
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg border border-primary/20 bg-secondary/30 p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Swords className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground font-display tracking-wider">TOTAL XP</span>
+                        </div>
+                        <p className="font-bold font-display text-lg text-accent">
+                          {totalXP.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground font-display">XP PROGRESS</span>
+                        <span className="text-primary font-mono">{playerStats.currentXP} / {playerStats.xpToNextLevel}</span>
+                      </div>
+                      <div className="h-3 bg-secondary rounded-full overflow-hidden border border-primary/20">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${playerStats.xpToNextLevel > 0 ? (playerStats.currentXP / playerStats.xpToNextLevel) * 100 : 100}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          style={{ boxShadow: "0 0 10px hsl(var(--primary))" }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Basic Info */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="border-primary/20 bg-card shadow-card">
+              <CardHeader>
+                <CardTitle className="text-primary font-display">BASIC INFO</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="displayName" className="text-muted-foreground">Display Name</Label>
+                  <Input
+                    id="displayName"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Enter your hunter name"
+                    maxLength={50}
+                    className="bg-secondary/50 border-primary/20"
                   />
                 </div>
 
-                {/* Name and Title */}
-                <div className="text-center">
-                  <h2 className="text-xl font-bold text-foreground">
-                    {displayName || "Anonymous Hunter"}
-                  </h2>
-                  <p 
-                    className="font-semibold"
-                    style={{ color: selectedTitle?.color }}
-                  >
-                    {selectedTitle?.title || "Novice Hunter"}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Level {playerStats.level} • {playerStats.rank}
-                  </p>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-muted-foreground">Email</Label>
+                  <Input
+                    id="email"
+                    value={user?.email || ""}
+                    disabled
+                    className="bg-muted border-border"
+                  />
+                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
 
-        {/* Basic Info */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card className="border-primary/20 bg-card">
-            <CardHeader>
-              <CardTitle className="text-primary">Basic Info</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Display Name */}
-              <div className="space-y-2">
-                <Label htmlFor="displayName">Display Name</Label>
-                <Input
-                  id="displayName"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Enter your display name"
-                  maxLength={50}
-                />
-              </div>
+                <Button onClick={handleSave} disabled={isLoading} className="w-full">
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-              {/* Email (read-only) */}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  value={user?.email || ""}
-                  disabled
-                  className="bg-muted"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Email cannot be changed
+          {/* Customization */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="border-primary/20 bg-card shadow-card">
+              <CardHeader>
+                <CardTitle className="text-primary font-display">CUSTOMIZE YOUR HUNTER</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Unlock new avatars and titles as you level up!
                 </p>
-              </div>
-
-              {/* Save Button */}
-              <Button
-                onClick={handleSave}
-                disabled={isLoading}
-                className="w-full"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Customization */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card className="border-primary/20 bg-card">
-            <CardHeader>
-              <CardTitle className="text-primary">Customize Your Hunter</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Unlock new avatars and titles as you level up!
-              </p>
-            </CardHeader>
-            <CardContent>
-              <ProfileCustomization
-                currentLevel={playerStats.level}
-                selectedAvatarId={selectedAvatarId}
-                selectedTitleId={selectedTitleId}
-                onSave={handleSaveCustomization}
-                saving={isSavingCustomization}
-              />
-            </CardContent>
-          </Card>
-        </motion.div>
-      </main>
+              </CardHeader>
+              <CardContent>
+                <ProfileCustomization
+                  currentLevel={playerStats.level}
+                  selectedAvatarId={selectedAvatarId}
+                  selectedTitleId={selectedTitleId}
+                  onSave={handleSaveCustomization}
+                  saving={isSavingCustomization}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        </main>
+      </div>
     </div>
   );
 }
