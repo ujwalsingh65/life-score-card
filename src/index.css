@@ -6,62 +6,62 @@
 
 @layer base {
   :root {
-    /* Light blue background with pure white content */
-    --background: 210 100% 85%;
-    --foreground: 215 80% 25%;
+    /* Deep black background with blue undertones */
+    --background: 225 30% 3%;
+    --foreground: 210 50% 95%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 215 80% 25%;
+    --card: 225 35% 6%;
+    --card-foreground: 210 50% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 80% 25%;
+    --popover: 225 35% 8%;
+    --popover-foreground: 210 50% 95%;
 
-    /* Deep blue primary */
-    --primary: 215 90% 45%;
-    --primary-foreground: 0 0% 100%;
+    /* Electric Blue primary - Solo Leveling signature */
+    --primary: 215 100% 55%;
+    --primary-foreground: 225 30% 3%;
 
-    --secondary: 0 0% 100%;
-    --secondary-foreground: 215 80% 25%;
+    --secondary: 225 25% 12%;
+    --secondary-foreground: 210 50% 90%;
 
-    --muted: 0 0% 98%;
-    --muted-foreground: 215 40% 40%;
+    --muted: 225 25% 10%;
+    --muted-foreground: 215 25% 50%;
 
-    /* Blue accent for highlights */
-    --accent: 215 100% 50%;
-    --accent-foreground: 0 0% 100%;
+    /* Cyan accent for highlights */
+    --accent: 195 100% 50%;
+    --accent-foreground: 225 30% 3%;
 
-    /* Success */
-    --success: 170 80% 35%;
-    --success-foreground: 0 0% 100%;
+    /* Success - Neon blue-green */
+    --success: 175 90% 45%;
+    --success-foreground: 225 30% 3%;
 
-    /* Warning */
-    --warning: 40 100% 50%;
-    --warning-foreground: 215 80% 20%;
+    /* Warning - Electric amber */
+    --warning: 40 100% 55%;
+    --warning-foreground: 225 30% 3%;
 
-    --destructive: 0 75% 50%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 85% 55%;
+    --destructive-foreground: 210 50% 95%;
 
-    --border: 0 0% 100%;
-    --input: 0 0% 100%;
-    --ring: 215 90% 45%;
+    --border: 215 30% 15%;
+    --input: 215 30% 12%;
+    --ring: 215 100% 55%;
 
     --radius: 0.5rem;
 
-    /* Chart colors */
-    --chart-1: 215 90% 45%;
-    --chart-2: 200 100% 45%;
-    --chart-3: 170 80% 35%;
-    --chart-4: 260 70% 55%;
-    --chart-5: 40 100% 50%;
+    /* Chart colors - Solo Leveling palette */
+    --chart-1: 215 100% 55%;
+    --chart-2: 195 100% 50%;
+    --chart-3: 175 90% 45%;
+    --chart-4: 260 85% 60%;
+    --chart-5: 40 100% 55%;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 215 80% 25%;
-    --sidebar-primary: 215 90% 45%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 98%;
-    --sidebar-accent-foreground: 215 80% 25%;
-    --sidebar-border: 0 0% 100%;
-    --sidebar-ring: 215 90% 45%;
+    --sidebar-background: 225 30% 4%;
+    --sidebar-foreground: 210 50% 95%;
+    --sidebar-primary: 215 100% 55%;
+    --sidebar-primary-foreground: 225 30% 3%;
+    --sidebar-accent: 225 25% 10%;
+    --sidebar-accent-foreground: 210 50% 95%;
+    --sidebar-border: 215 30% 12%;
+    --sidebar-ring: 215 100% 55%;
   }
 
   .dark {
