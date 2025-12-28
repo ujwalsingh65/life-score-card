@@ -60,6 +60,7 @@ export type Database = {
           icon: string
           id: string
           name: string
+          reminder_time: string | null
           target_days: number[]
           user_id: string
         }
@@ -70,6 +71,7 @@ export type Database = {
           icon: string
           id?: string
           name: string
+          reminder_time?: string | null
           target_days: number[]
           user_id: string
         }
@@ -80,6 +82,7 @@ export type Database = {
           icon?: string
           id?: string
           name?: string
+          reminder_time?: string | null
           target_days?: number[]
           user_id?: string
         }
@@ -109,6 +112,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          onesignal_player_id: string | null
           updated_at: string
         }
         Insert: {
@@ -116,6 +120,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          onesignal_player_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -123,6 +128,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          onesignal_player_id?: string | null
           updated_at?: string
         }
         Relationships: []
