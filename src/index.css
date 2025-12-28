@@ -6,8 +6,8 @@
 
 @layer base {
   :root {
-    /* Light blue background with white content */
-    --background: 210 70% 92%;
+    /* Light blue background with pure white content */
+    --background: 210 100% 85%;
     --foreground: 215 80% 25%;
 
     --card: 0 0% 100%;
@@ -16,38 +16,38 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 80% 25%;
 
-    /* Deep blue primary - Solo Leveling signature */
+    /* Deep blue primary */
     --primary: 215 90% 45%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 50% 96%;
+    --secondary: 0 0% 100%;
     --secondary-foreground: 215 80% 25%;
 
-    --muted: 210 40% 94%;
-    --muted-foreground: 215 30% 45%;
+    --muted: 0 0% 98%;
+    --muted-foreground: 215 40% 40%;
 
-    /* Cyan accent for highlights */
-    --accent: 200 100% 45%;
+    /* Blue accent for highlights */
+    --accent: 215 100% 50%;
     --accent-foreground: 0 0% 100%;
 
-    /* Success - Deep teal */
+    /* Success */
     --success: 170 80% 35%;
     --success-foreground: 0 0% 100%;
 
-    /* Warning - Amber */
+    /* Warning */
     --warning: 40 100% 50%;
     --warning-foreground: 215 80% 20%;
 
     --destructive: 0 75% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 60% 75%;
-    --input: 210 50% 96%;
+    --border: 0 0% 100%;
+    --input: 0 0% 100%;
     --ring: 215 90% 45%;
 
     --radius: 0.5rem;
 
-    /* Chart colors - Solo Leveling palette */
+    /* Chart colors */
     --chart-1: 215 90% 45%;
     --chart-2: 200 100% 45%;
     --chart-3: 170 80% 35%;
@@ -58,9 +58,9 @@
     --sidebar-foreground: 215 80% 25%;
     --sidebar-primary: 215 90% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 50% 96%;
+    --sidebar-accent: 0 0% 98%;
     --sidebar-accent-foreground: 215 80% 25%;
-    --sidebar-border: 215 60% 80%;
+    --sidebar-border: 0 0% 100%;
     --sidebar-ring: 215 90% 45%;
   }
 
