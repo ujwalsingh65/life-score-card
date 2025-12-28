@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Shield, TrendingUp, Battery } from "lucide-react";
-import { PlayerStats } from "@/types/habit";
+import { Zap, Shield, TrendingUp, Battery, Clock, Target } from "lucide-react";
+import { PlayerStats, LEVEL_CONFIG } from "@/types/habit";
 import { getRankColor } from "@/lib/xp";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,35 @@ interface PlayerLevelProps {
   dailyXPCap?: number;
 }
 
+// Calculate estimated time to max level
+function calculateTimeToMax(totalXP: number, dailyXPCap: number): { days: number; months: number; years: number; formatted: string } {
+  const maxXP = LEVEL_CONFIG[LEVEL_CONFIG.length - 1].xpRequired;
+  const remainingXP = Math.max(0, maxXP - totalXP);
+  
+  if (remainingXP === 0) {
+    return { days: 0, months: 0, years: 0, formatted: "MAX LEVEL ACHIEVED" };
+  }
+  
+  // Assume average daily XP is 90% of cap (realistic with consistent play)
+  const avgDailyXP = dailyXPCap * 0.9;
+  const daysRemaining = Math.ceil(remainingXP / avgDailyXP);
+  
+  const years = Math.floor(daysRemaining / 365);
+  const months = Math.floor((daysRemaining % 365) / 30);
+  const days = daysRemaining % 30;
+  
+  let formatted = "";
+  if (years > 0) {
+    formatted += `${years}y `;
+  }
+  if (months > 0 || years > 0) {
+    formatted += `${months}m `;
+  }
+  formatted += `${days}d`;
+  
+  return { days: daysRemaining, months, years, formatted: formatted.trim() };
+}
+
 export function PlayerLevel({ stats, showXPGain, dailyXPEarned = 0, dailyXPCap = 70 }: PlayerLevelProps) {
   const progressPercent = stats.xpToNextLevel > 0 
     ? (stats.currentXP / stats.xpToNextLevel) * 100 
@@ -18,6 +47,11 @@ export function PlayerLevel({ stats, showXPGain, dailyXPEarned = 0, dailyXPCap =
   const rankColor = getRankColor(stats.rank);
   const dailyXPPercent = (dailyXPEarned / dailyXPCap) * 100;
   const remainingDailyXP = Math.max(0, dailyXPCap - dailyXPEarned);
+  
+  const maxXP = LEVEL_CONFIG[LEVEL_CONFIG.length - 1].xpRequired;
+  const overallProgress = (stats.totalXP / maxXP) * 100;
+  const timeToMax = calculateTimeToMax(stats.totalXP, dailyXPCap);
+  const isMaxLevel = stats.level >= 100;
 
   return (
     <motion.div
@@ -109,6 +143,40 @@ export function PlayerLevel({ stats, showXPGain, dailyXPEarned = 0, dailyXPCap =
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Time to Max Level Tracker */}
+        <div className="mt-4 p-3 rounded-lg bg-secondary/30 border border-accent/20">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-accent" />
+              <span className="text-sm text-muted-foreground">Journey to National Level</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3 text-accent" />
+              <span className={cn(
+                "text-sm font-mono font-bold",
+                isMaxLevel ? "text-warning" : "text-accent"
+              )}>
+                {timeToMax.formatted}
+              </span>
+            </div>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-muted/50 border border-accent/10">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${overallProgress}%` }}
+              transition={{ duration: 1 }}
+              className="h-full rounded-full bg-gradient-to-r from-accent via-primary to-warning"
+              style={{
+                boxShadow: "0 0 8px hsl(var(--accent))"
+              }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+            <span>{stats.totalXP.toLocaleString()} / {maxXP.toLocaleString()} XP</span>
+            <span>{overallProgress.toFixed(1)}% complete</span>
+          </div>
+        </div>
 
         {/* Daily XP Cap Indicator */}
         <div className="mt-4 p-3 rounded-lg bg-secondary/30 border border-primary/20">
