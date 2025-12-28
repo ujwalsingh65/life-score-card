@@ -41,14 +41,16 @@ export interface PlayerStats {
   rank: string;
 }
 
-// XP rewards based on actions
+// XP rewards - balanced for 4-year journey to max level
+// Daily cap: 70 XP | Max level (100): 101,000 XP | 4 years: 1,460 days
+// Target avg: ~69 XP/day to reach max level in 4 years
 export const XP_REWARDS = {
-  HABIT_COMPLETE: 10,
-  STREAK_BONUS_3: 15,
-  STREAK_BONUS_7: 30,
-  STREAK_BONUS_14: 50,
-  STREAK_BONUS_30: 100,
-  PERFECT_DAY: 50,
+  HABIT_COMPLETE: 5,        // Base XP per habit (was 10)
+  STREAK_BONUS_3: 5,        // 3-day streak bonus (was 15)
+  STREAK_BONUS_7: 10,       // 7-day streak bonus (was 30)
+  STREAK_BONUS_14: 15,      // 14-day streak bonus (was 50)
+  STREAK_BONUS_30: 25,      // 30-day streak bonus (was 100)
+  PERFECT_DAY: 20,          // All habits completed bonus (was 50)
 } as const;
 
 // Level thresholds and ranks - 100 levels, National Level requires ~4 years of daily completion

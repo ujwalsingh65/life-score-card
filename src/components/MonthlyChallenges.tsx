@@ -100,13 +100,14 @@ function countMonthCompletions(logs: HabitLog[]): number {
   return logs.filter(l => l.date.startsWith(currentMonth) && l.completed).length;
 }
 
+// Monthly challenges - balanced for 4-year journey to max level
 const MONTHLY_CHALLENGES: Challenge[] = [
   {
     id: "monthly-warrior",
     title: "Monthly Warrior",
     description: "Complete 50 habit tasks this month",
     icon: Zap,
-    xpReward: 150,
+    xpReward: 50,    // Was 150
     target: 50,
     color: "hsl(215 100% 55%)",
     getProgress: (_, logs) => countMonthCompletions(logs),
@@ -116,7 +117,7 @@ const MONTHLY_CHALLENGES: Challenge[] = [
     title: "Perfect Week",
     description: "Achieve 7 perfect days this month",
     icon: Star,
-    xpReward: 200,
+    xpReward: 75,    // Was 200
     target: 7,
     color: "hsl(45 100% 50%)",
     getProgress: (habits, logs) => countPerfectDays(habits, logs),
@@ -126,7 +127,7 @@ const MONTHLY_CHALLENGES: Challenge[] = [
     title: "Streak Master",
     description: "Maintain a 14-day streak this month",
     icon: Flame,
-    xpReward: 250,
+    xpReward: 100,   // Was 250
     target: 14,
     color: "hsl(16 85% 58%)",
     getProgress: (habits, logs) => calculateMonthStreak(habits, logs),
@@ -136,7 +137,7 @@ const MONTHLY_CHALLENGES: Challenge[] = [
     title: "Habit Centurion",
     description: "Complete 100 habit tasks this month",
     icon: Crown,
-    xpReward: 300,
+    xpReward: 150,   // Was 300
     target: 100,
     color: "hsl(280 100% 65%)",
     getProgress: (_, logs) => countMonthCompletions(logs),
@@ -146,7 +147,7 @@ const MONTHLY_CHALLENGES: Challenge[] = [
     title: "Perfect Month",
     description: "Achieve 20 perfect days this month",
     icon: Target,
-    xpReward: 500,
+    xpReward: 250,   // Was 500
     target: 20,
     color: "hsl(175 90% 45%)",
     getProgress: (habits, logs) => countPerfectDays(habits, logs),

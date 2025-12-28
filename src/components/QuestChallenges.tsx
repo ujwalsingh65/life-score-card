@@ -16,10 +16,10 @@ interface QuestChallengesProps {
   remainingDailyXP: number;
 }
 
-// Quest reward values
+// Quest reward values - balanced for 4-year journey
 export const QUEST_REWARDS = {
-  DAILY_COMPLETE: 20,
-  WEEKLY_COMPLETE: 100,
+  DAILY_COMPLETE: 15,   // Was 20 - complete all daily habits
+  WEEKLY_COMPLETE: 50,  // Was 100 - complete all weekly habits
 } as const;
 
 export function QuestChallenges({
