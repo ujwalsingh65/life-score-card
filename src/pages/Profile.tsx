@@ -10,6 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { ProfileCustomization } from "@/components/ProfileCustomization";
+import { calculatePlayerStats } from "@/lib/xp";
+import { getAvatarById, getTitleById } from "@/lib/customization";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -19,9 +22,15 @@ export default function Profile() {
 
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [selectedAvatarId, setSelectedAvatarId] = useState("default");
+  const [selectedTitleId, setSelectedTitleId] = useState("novice");
+  const [totalXP, setTotalXP] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
+  const [isSavingCustomization, setIsSavingCustomization] = useState(false);
+
+  const playerStats = calculatePlayerStats(totalXP);
 
   useEffect(() => {
     if (!user) {
@@ -30,18 +39,35 @@ export default function Profile() {
     }
 
     const fetchProfile = async () => {
-      const { data, error } = await supabase
+      // Fetch profile data
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("display_name, avatar_url")
+        .select("display_name, avatar_url, selected_avatar_id, selected_title_id")
         .eq("id", user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching profile:", error);
-      } else if (data) {
-        setDisplayName(data.display_name || "");
-        setAvatarUrl(data.avatar_url);
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+      } else if (profileData) {
+        setDisplayName(profileData.display_name || "");
+        setAvatarUrl(profileData.avatar_url);
+        setSelectedAvatarId(profileData.selected_avatar_id || "default");
+        setSelectedTitleId(profileData.selected_title_id || "novice");
       }
+
+      // Fetch player stats for level
+      const { data: statsData, error: statsError } = await supabase
+        .from("player_stats")
+        .select("total_xp")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (statsError) {
+        console.error("Error fetching stats:", statsError);
+      } else if (statsData) {
+        setTotalXP(statsData.total_xp);
+      }
+
       setIsFetching(false);
     };
 
@@ -150,6 +176,38 @@ export default function Profile() {
     setIsLoading(false);
   };
 
+  const handleSaveCustomization = async (avatarId: string, titleId: string) => {
+    if (!user) return;
+
+    setIsSavingCustomization(true);
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ 
+        selected_avatar_id: avatarId,
+        selected_title_id: titleId,
+        updated_at: new Date().toISOString() 
+      })
+      .eq("id", user.id);
+
+    if (error) {
+      toast({
+        title: "Failed to save customization",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setSelectedAvatarId(avatarId);
+      setSelectedTitleId(titleId);
+      toast({
+        title: "Customization saved",
+        description: "Your avatar and title have been updated.",
+      });
+    }
+
+    setIsSavingCustomization(false);
+  };
+
   if (isFetching) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -158,9 +216,13 @@ export default function Profile() {
     );
   }
 
+  const selectedAvatar = getAvatarById(selectedAvatarId);
+  const selectedTitle = getTitleById(selectedTitleId);
+  const AvatarIcon = selectedAvatar?.icon || User;
+
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border">
+      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-primary/20">
         <div className="container max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
           <Button
             variant="ghost"
@@ -170,30 +232,40 @@ export default function Profile() {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-bold">Profile</h1>
+          <h1 className="text-xl font-bold font-display text-primary">HUNTER PROFILE</h1>
         </div>
       </header>
 
-      <main className="container max-w-2xl mx-auto px-4 py-8">
+      <main className="container max-w-2xl mx-auto px-4 py-8 space-y-6">
+        {/* Profile Preview */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
         >
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Profile</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Avatar Section */}
+          <Card className="border-primary/20 bg-card">
+            <CardContent className="pt-6">
               <div className="flex flex-col items-center gap-4">
+                {/* Avatar Display */}
                 <div className="relative">
-                  <Avatar className="h-24 w-24 border-4 border-primary/20">
-                    <AvatarImage src={avatarUrl || undefined} />
-                    <AvatarFallback className="bg-primary/10 text-primary">
-                      <User className="h-10 w-10" />
-                    </AvatarFallback>
-                  </Avatar>
+                  {avatarUrl ? (
+                    <Avatar className="h-24 w-24 border-4" style={{ borderColor: selectedAvatar?.color || "hsl(var(--primary))" }}>
+                      <AvatarImage src={avatarUrl} />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        <User className="h-10 w-10" />
+                      </AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <div
+                      className="h-24 w-24 rounded-full flex items-center justify-center border-4"
+                      style={{ 
+                        backgroundColor: selectedAvatar?.bgColor || "hsl(var(--secondary))",
+                        borderColor: selectedAvatar?.color || "hsl(var(--primary))",
+                        boxShadow: `0 0 20px ${selectedAvatar?.color || "hsl(var(--primary))"}40`
+                      }}
+                    >
+                      <AvatarIcon className="h-12 w-12" style={{ color: selectedAvatar?.color }} />
+                    </div>
+                  )}
                   <button
                     onClick={handleAvatarClick}
                     disabled={isUploading}
@@ -213,11 +285,38 @@ export default function Profile() {
                     className="hidden"
                   />
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Click the camera icon to upload a new avatar
-                </p>
-              </div>
 
+                {/* Name and Title */}
+                <div className="text-center">
+                  <h2 className="text-xl font-bold text-foreground">
+                    {displayName || "Anonymous Hunter"}
+                  </h2>
+                  <p 
+                    className="font-semibold"
+                    style={{ color: selectedTitle?.color }}
+                  >
+                    {selectedTitle?.title || "Novice Hunter"}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Level {playerStats.level} • {playerStats.rank}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Basic Info */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="border-primary/20 bg-card">
+            <CardHeader>
+              <CardTitle className="text-primary">Basic Info</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               {/* Display Name */}
               <div className="space-y-2">
                 <Label htmlFor="displayName">Display Name</Label>
@@ -262,6 +361,31 @@ export default function Profile() {
                   </>
                 )}
               </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Customization */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="border-primary/20 bg-card">
+            <CardHeader>
+              <CardTitle className="text-primary">Customize Your Hunter</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Unlock new avatars and titles as you level up!
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ProfileCustomization
+                currentLevel={playerStats.level}
+                selectedAvatarId={selectedAvatarId}
+                selectedTitleId={selectedTitleId}
+                onSave={handleSaveCustomization}
+                saving={isSavingCustomization}
+              />
             </CardContent>
           </Card>
         </motion.div>

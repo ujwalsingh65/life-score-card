@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Trophy, Crown, Medal, Award, User, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { calculatePlayerStats, getRankColor } from "@/lib/xp";
+import { getAvatarById, getTitleById } from "@/lib/customization";
 import { cn } from "@/lib/utils";
 
 interface LeaderboardEntry {
@@ -11,6 +12,8 @@ interface LeaderboardEntry {
   totalXP: number;
   level: number;
   rank: string;
+  selectedAvatarId: string;
+  selectedTitleId: string;
 }
 
 interface LeaderboardProps {
@@ -43,28 +46,35 @@ export function Leaderboard({ currentUserId }: LeaderboardProps) {
           return;
         }
 
-        // Fetch profiles for display names
+        // Fetch profiles for display names and customization
         const userIds = statsData.map(s => s.id);
         const { data: profilesData, error: profilesError } = await supabase
           .from("profiles")
-          .select("id, display_name")
+          .select("id, display_name, selected_avatar_id, selected_title_id")
           .in("id", userIds);
 
         if (profilesError) throw profilesError;
 
         // Combine data
         const profileMap = new Map(
-          (profilesData || []).map(p => [p.id, p.display_name])
+          (profilesData || []).map(p => [p.id, {
+            displayName: p.display_name,
+            avatarId: p.selected_avatar_id || "default",
+            titleId: p.selected_title_id || "novice"
+          }])
         );
 
         const leaderboardEntries: LeaderboardEntry[] = statsData.map(stat => {
           const playerStats = calculatePlayerStats(stat.total_xp);
+          const profile = profileMap.get(stat.id);
           return {
             id: stat.id,
-            displayName: profileMap.get(stat.id) || "Anonymous Hunter",
+            displayName: profile?.displayName || "Anonymous Hunter",
             totalXP: stat.total_xp,
             level: playerStats.level,
             rank: playerStats.rank,
+            selectedAvatarId: profile?.avatarId || "default",
+            selectedTitleId: profile?.titleId || "novice",
           };
         });
 
@@ -220,6 +230,9 @@ export function Leaderboard({ currentUserId }: LeaderboardProps) {
       <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
         {entries.map((entry, index) => {
           const isCurrentUser = entry.id === currentUserId;
+          const avatar = getAvatarById(entry.selectedAvatarId);
+          const title = getTitleById(entry.selectedTitleId);
+          const AvatarIcon = avatar?.icon || User;
           
           return (
             <motion.div
@@ -238,15 +251,15 @@ export function Leaderboard({ currentUserId }: LeaderboardProps) {
                 {getRankIcon(index)}
               </div>
 
-              {/* Avatar placeholder */}
+              {/* Avatar with customization */}
               <div 
                 className="w-10 h-10 rounded-full flex items-center justify-center"
                 style={{ 
-                  backgroundColor: `${getRankColor(entry.rank)}30`,
-                  border: `2px solid ${getRankColor(entry.rank)}` 
+                  backgroundColor: avatar?.bgColor || `${getRankColor(entry.rank)}30`,
+                  border: `2px solid ${avatar?.color || getRankColor(entry.rank)}` 
                 }}
               >
-                <User className="h-5 w-5" style={{ color: getRankColor(entry.rank) }} />
+                <AvatarIcon className="h-5 w-5" style={{ color: avatar?.color || getRankColor(entry.rank) }} />
               </div>
 
               {/* Info */}
@@ -260,8 +273,8 @@ export function Leaderboard({ currentUserId }: LeaderboardProps) {
                     {isCurrentUser && <span className="ml-2 text-xs">(You)</span>}
                   </p>
                 </div>
-                <p className="text-xs" style={{ color: getRankColor(entry.rank) }}>
-                  {entry.rank}
+                <p className="text-xs" style={{ color: title?.color || getRankColor(entry.rank) }}>
+                  {title?.title || entry.rank}
                 </p>
               </div>
 
