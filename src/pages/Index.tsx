@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Zap, LayoutGrid, Calendar, Trash2, MoreVertical, BarChart3, Trophy, LogOut, Loader2, User } from "lucide-react";
+import { Flame, Zap, LayoutGrid, Calendar, Trash2, MoreVertical, BarChart3, Trophy, LogOut, Loader2, User, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
@@ -16,6 +16,7 @@ import { AchievementsPanel } from "@/components/AchievementsPanel";
 import { RankProgressionDisplay } from "@/components/RankProgressionDisplay";
 import { QuestChallenges, QUEST_REWARDS } from "@/components/QuestChallenges";
 import { MonthlyChallenges } from "@/components/MonthlyChallenges";
+import { Leaderboard } from "@/components/Leaderboard";
 import { AchievementToast } from "@/components/AchievementToast";
 import { LevelUpOverlay } from "@/components/LevelUpOverlay";
 import { NotificationToggle } from "@/components/NotificationToggle";
@@ -441,7 +442,7 @@ export default function Index() {
 
         {/* Main Content */}
         <Tabs defaultValue="today" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4 mx-auto bg-secondary/50 border border-primary/20">
+          <TabsList className="grid w-full max-w-3xl grid-cols-5 mx-auto bg-secondary/50 border border-primary/20">
             <TabsTrigger value="today" className="gap-2 font-display text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <LayoutGrid className="h-4 w-4" />
               TODAY
@@ -453,6 +454,10 @@ export default function Index() {
             <TabsTrigger value="analytics" className="gap-2 font-display text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <BarChart3 className="h-4 w-4" />
               STATS
+            </TabsTrigger>
+            <TabsTrigger value="leaderboard" className="gap-2 font-display text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Users className="h-4 w-4" />
+              RANKS
             </TabsTrigger>
             <TabsTrigger value="achievements" className="gap-2 font-display text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Trophy className="h-4 w-4" />
@@ -612,6 +617,17 @@ export default function Index() {
               
               <RankProgressionDisplay stats={playerStats} />
             </div>
+          </TabsContent>
+
+          {/* Leaderboard Tab */}
+          <TabsContent value="leaderboard">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-lg border border-primary/20 bg-card p-6 shadow-system"
+            >
+              <Leaderboard currentUserId={user?.id} />
+            </motion.div>
           </TabsContent>
 
           {/* Achievements Tab */}
