@@ -148,6 +148,18 @@ export default function Auth() {
 
         {/* Form Card with Double Border */}
         <div className="system-border rounded-xl bg-card p-8 shadow-system">
+          {/* Corner Glow Effects */}
+          <div className="system-border-glow top-left" />
+          <div className="system-border-glow top-right" />
+          <div className="system-border-glow bottom-left" />
+          <div className="system-border-glow bottom-right" />
+          
+          {/* Floating Particles */}
+          <div className="system-particles">
+            <div className="system-particle" />
+            <div className="system-particle" />
+            <div className="system-particle" />
+          </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             {!isLogin && (
               <motion.div

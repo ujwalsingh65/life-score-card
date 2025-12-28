@@ -378,6 +378,21 @@ export default function Index() {
     <div className="min-h-screen bg-background p-4 md:p-6">
       {/* Main System Container with Double Border */}
       <div className="system-border rounded-lg bg-card min-h-[calc(100vh-3rem)]">
+        {/* Corner Glow Effects */}
+        <div className="system-border-glow top-left" />
+        <div className="system-border-glow top-right" />
+        <div className="system-border-glow bottom-left" />
+        <div className="system-border-glow bottom-right" />
+        
+        {/* Floating Particles */}
+        <div className="system-particles">
+          <div className="system-particle" />
+          <div className="system-particle" />
+          <div className="system-particle" />
+          <div className="system-particle" />
+          <div className="system-particle" />
+        </div>
+
         {/* Header */}
         <header className="border-b-2 border-primary/30 bg-card sticky top-0 z-50 rounded-t-lg">
           <div className="container mx-auto px-4 py-4">
