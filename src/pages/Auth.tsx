@@ -116,7 +116,7 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 md:p-8">
       {/* Background effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
@@ -139,15 +139,15 @@ export default function Auth() {
             <Zap className="h-8 w-8 text-primary-foreground" />
           </motion.div>
           <h1 className="font-display text-3xl font-bold text-primary text-glow">
-            QUEST MONITOR
+            SYSTEM
           </h1>
           <p className="text-muted-foreground mt-2">
             {isLogin ? "Welcome back, Hunter" : "Register as a new Hunter"}
           </p>
         </div>
 
-        {/* Form Card */}
-        <div className="rounded-xl border border-primary/20 bg-card p-8 shadow-system">
+        {/* Form Card with Double Border */}
+        <div className="system-border rounded-xl bg-card p-8 shadow-system">
           <form onSubmit={handleSubmit} className="space-y-6">
             {!isLogin && (
               <motion.div
