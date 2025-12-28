@@ -375,45 +375,47 @@ export default function Index() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-primary/20 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-neon animate-pulse-glow">
-                <Zap className="h-5 w-5 text-primary-foreground" />
+    <div className="min-h-screen bg-background p-4 md:p-6">
+      {/* Main System Container with Double Border */}
+      <div className="system-border rounded-lg bg-card min-h-[calc(100vh-3rem)]">
+        {/* Header */}
+        <header className="border-b-2 border-primary/30 bg-card sticky top-0 z-50 rounded-t-lg">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-neon animate-pulse-glow">
+                  <Zap className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <div>
+                  <h1 className="font-display text-xl font-bold text-primary text-glow">SYSTEM</h1>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Level Up Your Life</p>
+                </div>
               </div>
-              <div>
-                <h1 className="font-display text-xl font-bold text-primary text-glow">QUEST MONITOR</h1>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Level Up Your Life</p>
+              <div className="flex items-center gap-2">
+                <AddHabitDialog onAdd={handleAddHabit} />
+                <NotificationToggle />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/profile")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <User className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleSignOut}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <AddHabitDialog onAdd={handleAddHabit} />
-              <NotificationToggle />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/profile")}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <User className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleSignOut}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-8">
         {/* Player Level */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -641,7 +643,15 @@ export default function Index() {
             </motion.div>
           </TabsContent>
         </Tabs>
-      </main>
+
+        {/* Footer */}
+        <footer className="border-t-2 border-primary/20 py-6 mt-12">
+          <div className="text-center text-sm text-muted-foreground font-display tracking-wider">
+            LEVEL UP YOUR LIFE • ONE QUEST AT A TIME
+          </div>
+        </footer>
+        </main>
+      </div>
 
       {/* Level Up Overlay */}
       <LevelUpOverlay
@@ -656,13 +666,6 @@ export default function Index() {
         achievement={newAchievement} 
         onClose={() => setNewAchievement(null)} 
       />
-
-      {/* Footer */}
-      <footer className="border-t border-primary/20 py-6 mt-12">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground font-display tracking-wider">
-          LEVEL UP YOUR LIFE • ONE QUEST AT A TIME
-        </div>
-      </footer>
     </div>
   );
 }
