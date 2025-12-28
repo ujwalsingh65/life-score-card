@@ -16,6 +16,7 @@ export interface Habit {
   color: string;
   targetDays: number[]; // 0-6, Sunday-Saturday
   createdAt: string;
+  reminderTime?: string | null; // HH:MM format
 }
 
 export interface HabitLog {

@@ -12,6 +12,7 @@ interface DbHabit {
   color: string;
   target_days: number[];
   created_at: string;
+  reminder_time: string | null;
 }
 
 interface DbHabitLog {
@@ -75,6 +76,7 @@ export function useSupabaseData() {
               color: h.color,
               targetDays: h.target_days,
               createdAt: h.created_at,
+              reminderTime: h.reminder_time,
             }))
           );
         }
@@ -142,6 +144,7 @@ export function useSupabaseData() {
           icon: habit.icon,
           color: habit.color,
           target_days: habit.targetDays,
+          reminder_time: habit.reminderTime || null,
         })
         .select()
         .single();
@@ -159,6 +162,7 @@ export function useSupabaseData() {
         color: data.color,
         targetDays: data.target_days,
         createdAt: data.created_at,
+        reminderTime: data.reminder_time,
       };
 
       setHabits((prev) => [...prev, newHabit]);
