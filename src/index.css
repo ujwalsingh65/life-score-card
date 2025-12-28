@@ -6,6 +6,11 @@
 
 @layer base {
   :root {
+    --radius: 0.5rem;
+  }
+
+  /* Dark Theme - Blue-Black (Default) */
+  .dark, :root:not(.light) {
     /* Deep black background with blue undertones */
     --background: 225 30% 3%;
     --foreground: 210 50% 95%;
@@ -18,7 +23,7 @@
 
     /* Electric Blue primary - Solo Leveling signature */
     --primary: 215 100% 55%;
-    --primary-foreground: 225 30% 3%;
+    --primary-foreground: 210 50% 98%;
 
     --secondary: 225 25% 12%;
     --secondary-foreground: 210 50% 90%;
@@ -45,8 +50,6 @@
     --input: 215 30% 12%;
     --ring: 215 100% 55%;
 
-    --radius: 0.5rem;
-
     /* Chart colors - Solo Leveling palette */
     --chart-1: 215 100% 55%;
     --chart-2: 195 100% 50%;
@@ -64,23 +67,61 @@
     --sidebar-ring: 215 100% 55%;
   }
 
-  .dark {
-    --background: 215 50% 12%;
-    --foreground: 210 50% 95%;
-    --card: 215 45% 18%;
-    --card-foreground: 210 50% 95%;
-    --popover: 215 45% 20%;
-    --popover-foreground: 210 50% 95%;
-    --primary: 215 100% 60%;
-    --primary-foreground: 215 50% 10%;
-    --secondary: 215 40% 25%;
-    --secondary-foreground: 210 50% 90%;
-    --muted: 215 35% 22%;
-    --muted-foreground: 215 25% 55%;
-    --accent: 200 100% 55%;
-    --accent-foreground: 215 50% 10%;
-    --border: 215 40% 30%;
-    --input: 215 40% 22%;
+  /* Light Theme - Blue-White */
+  .light {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 210 40% 96%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Electric Blue primary */
+    --primary: 215 100% 50%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 92%;
+    --muted-foreground: 215 25% 40%;
+
+    /* Cyan accent for highlights */
+    --accent: 195 100% 45%;
+    --accent-foreground: 210 40% 98%;
+
+    /* Success */
+    --success: 175 90% 35%;
+    --success-foreground: 210 40% 98%;
+
+    /* Warning */
+    --warning: 40 100% 50%;
+    --warning-foreground: 222 47% 11%;
+
+    --destructive: 0 85% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 32% 85%;
+    --input: 214 32% 88%;
+    --ring: 215 100% 50%;
+
+    /* Chart colors */
+    --chart-1: 215 100% 50%;
+    --chart-2: 195 100% 45%;
+    --chart-3: 175 90% 35%;
+    --chart-4: 260 85% 55%;
+    --chart-5: 40 100% 50%;
+
+    --sidebar-background: 210 40% 96%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 215 100% 50%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 214 32% 91%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 85%;
+    --sidebar-ring: 215 100% 50%;
   }
 }
 
