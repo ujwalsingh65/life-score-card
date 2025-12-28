@@ -20,6 +20,7 @@ import { Leaderboard } from "@/components/Leaderboard";
 import { AchievementToast } from "@/components/AchievementToast";
 import { LevelUpOverlay } from "@/components/LevelUpOverlay";
 import { NotificationToggle } from "@/components/NotificationToggle";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -408,6 +409,7 @@ export default function Index() {
               </div>
               <div className="flex items-center gap-2">
                 <AddHabitDialog onAdd={handleAddHabit} />
+                <ThemeToggle />
                 <NotificationToggle />
                 <Button
                   variant="ghost"
