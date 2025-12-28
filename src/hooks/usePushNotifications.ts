@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
@@ -20,21 +20,44 @@ declare global {
   }
 }
 
-const ONESIGNAL_APP_ID = import.meta.env.VITE_ONESIGNAL_APP_ID;
-
 export function usePushNotifications() {
   const { user } = useAuth();
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [appId, setAppId] = useState<string | null>(null);
+  const initializingRef = useRef(false);
 
-  // Initialize OneSignal
+  // Fetch OneSignal App ID from backend
   useEffect(() => {
-    if (!ONESIGNAL_APP_ID) {
-      console.log("OneSignal App ID not configured");
-      setIsLoading(false);
-      return;
-    }
+    const fetchConfig = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("get-onesignal-config");
+        
+        if (error) {
+          console.log("OneSignal config not available:", error);
+          setIsLoading(false);
+          return;
+        }
+
+        if (data?.appId) {
+          setAppId(data.appId);
+        } else {
+          console.log("OneSignal App ID not configured");
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("Failed to fetch OneSignal config:", error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchConfig();
+  }, []);
+
+  // Initialize OneSignal once we have the App ID
+  useEffect(() => {
+    if (!appId || initializingRef.current) return;
 
     // Check if push is supported
     if (!("Notification" in window) || !("serviceWorker" in navigator)) {
@@ -44,6 +67,7 @@ export function usePushNotifications() {
     }
 
     setIsSupported(true);
+    initializingRef.current = true;
 
     // Load OneSignal SDK
     const script = document.createElement("script");
@@ -56,7 +80,7 @@ export function usePushNotifications() {
         
         try {
           await OneSignal.init({
-            appId: ONESIGNAL_APP_ID,
+            appId: appId,
             allowLocalhostAsSecureOrigin: true,
             notifyButton: {
               enable: false,
@@ -70,9 +94,6 @@ export function usePushNotifications() {
           // Listen for subscription changes
           OneSignal.on("subscriptionChange", async (isSubscribed: boolean) => {
             setIsSubscribed(isSubscribed);
-            if (isSubscribed && user) {
-              await registerPlayerId();
-            }
           });
 
           setIsLoading(false);
@@ -83,6 +104,11 @@ export function usePushNotifications() {
       });
     };
     
+    script.onerror = () => {
+      console.error("Failed to load OneSignal SDK");
+      setIsLoading(false);
+    };
+
     document.head.appendChild(script);
 
     return () => {
@@ -90,7 +116,7 @@ export function usePushNotifications() {
         script.parentNode.removeChild(script);
       }
     };
-  }, []);
+  }, [appId]);
 
   // Register player ID with backend
   const registerPlayerId = useCallback(async () => {
@@ -104,9 +130,6 @@ export function usePushNotifications() {
       }
 
       console.log("Registering player ID:", playerId);
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
 
       const { error } = await supabase.functions.invoke("register-push-token", {
         body: { playerId },
@@ -124,10 +147,10 @@ export function usePushNotifications() {
 
   // Register when user logs in and is subscribed
   useEffect(() => {
-    if (user && isSubscribed) {
+    if (user && isSubscribed && !isLoading) {
       registerPlayerId();
     }
-  }, [user, isSubscribed, registerPlayerId]);
+  }, [user, isSubscribed, isLoading, registerPlayerId]);
 
   // Request permission
   const requestPermission = useCallback(async () => {
