@@ -15,17 +15,76 @@ import {
   Bar,
   Legend,
 } from "recharts";
-import { Habit } from "@/types/habit";
-import { getWeeklyData, getCategoryStats, getHabitCompletionData } from "@/lib/habits";
+import { Habit, HabitLog } from "@/types/habit";
 
 interface AnalyticsChartsProps {
   habits: Habit[];
+  logs: HabitLog[];
+  isCompleted: (habitId: string, date: string) => boolean;
 }
 
-export function AnalyticsCharts({ habits }: AnalyticsChartsProps) {
-  const weeklyData = useMemo(() => getWeeklyData(), [habits]);
-  const categoryData = useMemo(() => getCategoryStats(), [habits]);
-  const habitCompletionData = useMemo(() => getHabitCompletionData(), [habits]);
+export function AnalyticsCharts({ habits, logs, isCompleted }: AnalyticsChartsProps) {
+  // Calculate weekly data from actual logs
+  const weeklyData = useMemo(() => {
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const result = [];
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(weekStart);
+      date.setDate(date.getDate() + i);
+      const dateStr = date.toISOString().split("T")[0];
+      const dayOfWeek = date.getDay();
+      
+      const habitsForDay = habits.filter(h => h.targetDays.includes(dayOfWeek));
+      const completed = habitsForDay.filter(h => isCompleted(h.id, dateStr)).length;
+      const total = habitsForDay.length;
+      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+      
+      result.push({ day: days[dayOfWeek], completed, total, percentage });
+    }
+    
+    return result;
+  }, [habits, isCompleted]);
+
+  // Calculate category stats from actual habits
+  const categoryData = useMemo(() => {
+    const categoryMap: Record<string, number> = {};
+    habits.forEach(habit => {
+      categoryMap[habit.category] = (categoryMap[habit.category] || 0) + 1;
+    });
+    return Object.entries(categoryMap).map(([name, value]) => ({ name, value }));
+  }, [habits]);
+
+  // Calculate habit completion data from actual logs
+  const habitCompletionData = useMemo(() => {
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    
+    return habits.map(habit => {
+      let completed = 0;
+      let missed = 0;
+      
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(weekStart);
+        date.setDate(date.getDate() + i);
+        const dateStr = date.toISOString().split("T")[0];
+        const dayOfWeek = date.getDay();
+        
+        if (habit.targetDays.includes(dayOfWeek)) {
+          if (isCompleted(habit.id, dateStr)) {
+            completed++;
+          } else if (date <= new Date()) {
+            missed++;
+          }
+        }
+      }
+      
+      return { name: habit.name, completed, missed };
+    });
+  }, [habits, isCompleted]);
 
   // Solo Leveling blue-purple palette
   const COLORS = [

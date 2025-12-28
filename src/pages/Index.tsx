@@ -427,7 +427,7 @@ export default function Index() {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics">
-            <AnalyticsCharts habits={habits} />
+            <AnalyticsCharts habits={habits} logs={logs} isCompleted={isCompleted} />
           </TabsContent>
 
           {/* Achievements Tab */}
