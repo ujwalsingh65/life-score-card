@@ -28,7 +28,12 @@ interface DbPlayerStats {
   id: string;
   total_xp: number;
   updated_at: string;
+  daily_xp_earned: number;
+  last_xp_date: string;
 }
+
+// Daily XP cap - ensures level 100 takes ~4 years (101,000 XP / 1460 days ≈ 70 XP/day)
+const DAILY_XP_CAP = 70;
 
 interface DbUnlockedAchievement {
   id: string;
@@ -42,6 +47,8 @@ export function useSupabaseData() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [logs, setLogs] = useState<HabitLog[]>([]);
   const [totalXP, setTotalXP] = useState(0);
+  const [dailyXPEarned, setDailyXPEarned] = useState(0);
+  const [lastXPDate, setLastXPDate] = useState<string>("");
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -106,7 +113,18 @@ export function useSupabaseData() {
           .maybeSingle();
 
         if (statsData) {
-          setTotalXP((statsData as DbPlayerStats).total_xp);
+          const stats = statsData as DbPlayerStats;
+          setTotalXP(stats.total_xp);
+          
+          // Check if it's a new day - reset daily XP if so
+          const today = new Date().toISOString().split("T")[0];
+          if (stats.last_xp_date !== today) {
+            setDailyXPEarned(0);
+            setLastXPDate(today);
+          } else {
+            setDailyXPEarned(stats.daily_xp_earned);
+            setLastXPDate(stats.last_xp_date);
+          }
         }
 
         // Fetch achievements
@@ -241,28 +259,63 @@ export function useSupabaseData() {
     [user, logs]
   );
 
-  // Update XP
+  // Update XP with daily cap enforcement
   const updateXP = useCallback(
-    async (amount: number): Promise<number> => {
-      if (!user) return totalXP;
+    async (amount: number): Promise<{ xpGained: number; cappedOut: boolean }> => {
+      if (!user) return { xpGained: 0, cappedOut: false };
 
-      const newTotal = totalXP + amount;
+      const today = new Date().toISOString().split("T")[0];
+      
+      // Reset daily XP if it's a new day
+      let currentDailyXP = dailyXPEarned;
+      if (lastXPDate !== today) {
+        currentDailyXP = 0;
+      }
+
+      // Calculate how much XP can be earned (respecting cap)
+      const remainingDailyXP = Math.max(0, DAILY_XP_CAP - currentDailyXP);
+      const actualXPGain = Math.min(amount, remainingDailyXP);
+      const cappedOut = actualXPGain < amount;
+
+      if (actualXPGain <= 0) {
+        return { xpGained: 0, cappedOut: true };
+      }
+
+      const newTotal = totalXP + actualXPGain;
+      const newDailyXP = currentDailyXP + actualXPGain;
 
       const { error } = await supabase
         .from("player_stats")
-        .update({ total_xp: newTotal, updated_at: new Date().toISOString() })
+        .update({ 
+          total_xp: newTotal, 
+          daily_xp_earned: newDailyXP,
+          last_xp_date: today,
+          updated_at: new Date().toISOString() 
+        })
         .eq("id", user.id);
 
       if (error) {
         console.error("Error updating XP:", error);
-        return totalXP;
+        return { xpGained: 0, cappedOut: false };
       }
 
       setTotalXP(newTotal);
-      return newTotal;
+      setDailyXPEarned(newDailyXP);
+      setLastXPDate(today);
+      
+      return { xpGained: actualXPGain, cappedOut };
     },
-    [user, totalXP]
+    [user, totalXP, dailyXPEarned, lastXPDate]
   );
+
+  // Get remaining daily XP
+  const getRemainingDailyXP = useCallback((): number => {
+    const today = new Date().toISOString().split("T")[0];
+    if (lastXPDate !== today) {
+      return DAILY_XP_CAP;
+    }
+    return Math.max(0, DAILY_XP_CAP - dailyXPEarned);
+  }, [dailyXPEarned, lastXPDate]);
 
   // Unlock achievement
   const unlockAchievement = useCallback(
@@ -392,6 +445,8 @@ export function useSupabaseData() {
     habits,
     logs,
     totalXP,
+    dailyXPEarned,
+    dailyXPCap: DAILY_XP_CAP,
     unlockedAchievements,
     loading,
     addHabit,
@@ -404,5 +459,6 @@ export function useSupabaseData() {
     getBestStreak,
     getTodayHabits,
     getTodayStats,
+    getRemainingDailyXP,
   };
 }

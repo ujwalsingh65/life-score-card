@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Shield, TrendingUp } from "lucide-react";
+import { Zap, Shield, TrendingUp, Battery } from "lucide-react";
 import { PlayerStats } from "@/types/habit";
 import { getRankColor } from "@/lib/xp";
 import { cn } from "@/lib/utils";
@@ -7,13 +7,17 @@ import { cn } from "@/lib/utils";
 interface PlayerLevelProps {
   stats: PlayerStats;
   showXPGain?: number;
+  dailyXPEarned?: number;
+  dailyXPCap?: number;
 }
 
-export function PlayerLevel({ stats, showXPGain }: PlayerLevelProps) {
+export function PlayerLevel({ stats, showXPGain, dailyXPEarned = 0, dailyXPCap = 70 }: PlayerLevelProps) {
   const progressPercent = stats.xpToNextLevel > 0 
     ? (stats.currentXP / stats.xpToNextLevel) * 100 
     : 100;
   const rankColor = getRankColor(stats.rank);
+  const dailyXPPercent = (dailyXPEarned / dailyXPCap) * 100;
+  const remainingDailyXP = Math.max(0, dailyXPCap - dailyXPEarned);
 
   return (
     <motion.div
@@ -106,6 +110,37 @@ export function PlayerLevel({ stats, showXPGain }: PlayerLevelProps) {
           )}
         </AnimatePresence>
 
+        {/* Daily XP Cap Indicator */}
+        <div className="mt-4 p-3 rounded-lg bg-secondary/30 border border-primary/20">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Battery className={cn("h-4 w-4", remainingDailyXP > 0 ? "text-accent" : "text-muted-foreground")} />
+              <span className="text-sm text-muted-foreground">Daily XP</span>
+            </div>
+            <span className={cn("text-sm font-mono font-bold", remainingDailyXP > 0 ? "text-accent" : "text-muted-foreground")}>
+              {remainingDailyXP}/{dailyXPCap} remaining
+            </span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-muted/50 border border-primary/10">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${dailyXPPercent}%` }}
+              transition={{ duration: 0.5 }}
+              className={cn(
+                "h-full rounded-full",
+                dailyXPPercent >= 100 
+                  ? "bg-muted-foreground" 
+                  : "bg-gradient-to-r from-accent to-primary"
+              )}
+            />
+          </div>
+          {remainingDailyXP === 0 && (
+            <p className="text-xs text-muted-foreground mt-2 text-center">
+              Daily cap reached! Come back tomorrow.
+            </p>
+          )}
+        </div>
+
         {/* Stats Row */}
         <div className="mt-4 grid grid-cols-3 gap-4">
           <div className="text-center">
@@ -122,8 +157,8 @@ export function PlayerLevel({ stats, showXPGain }: PlayerLevelProps) {
             <p className="text-xs text-muted-foreground">To Next Level</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-foreground">{stats.level}</p>
-            <p className="text-xs text-muted-foreground">Current Level</p>
+            <p className="text-lg font-bold text-foreground">{stats.level}/100</p>
+            <p className="text-xs text-muted-foreground">Level</p>
           </div>
         </div>
       </div>

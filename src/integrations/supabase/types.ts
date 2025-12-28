@@ -90,17 +90,23 @@ export type Database = {
       }
       player_stats: {
         Row: {
+          daily_xp_earned: number
           id: string
+          last_xp_date: string
           total_xp: number
           updated_at: string
         }
         Insert: {
+          daily_xp_earned?: number
           id: string
+          last_xp_date?: string
           total_xp?: number
           updated_at?: string
         }
         Update: {
+          daily_xp_earned?: number
           id?: string
+          last_xp_date?: string
           total_xp?: number
           updated_at?: string
         }
