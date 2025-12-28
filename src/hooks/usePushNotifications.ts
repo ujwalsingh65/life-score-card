@@ -26,77 +26,83 @@ export function usePushNotifications() {
   const [isSupported, setIsSupported] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [appId, setAppId] = useState<string | null>(null);
-  const initializingRef = useRef(false);
+  const initRef = useRef(false);
+  const scriptRef = useRef<HTMLScriptElement | null>(null);
 
   // Fetch OneSignal App ID from backend
   useEffect(() => {
+    let mounted = true;
+
     const fetchConfig = async () => {
       try {
         const { data, error } = await supabase.functions.invoke("get-onesignal-config");
         
-        if (error) {
-          console.log("OneSignal config not available:", error);
+        if (!mounted) return;
+        
+        if (error || !data?.appId) {
+          console.log("OneSignal config not available");
           setIsLoading(false);
           return;
         }
 
-        if (data?.appId) {
-          setAppId(data.appId);
-        } else {
-          console.log("OneSignal App ID not configured");
-          setIsLoading(false);
-        }
+        setAppId(data.appId);
       } catch (error) {
         console.error("Failed to fetch OneSignal config:", error);
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchConfig();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Initialize OneSignal once we have the App ID
   useEffect(() => {
-    if (!appId || initializingRef.current) return;
+    if (!appId || initRef.current) return;
 
     // Check if push is supported
-    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+    if (typeof window === "undefined" || !("Notification" in window) || !("serviceWorker" in navigator)) {
       console.log("Push notifications not supported");
       setIsLoading(false);
       return;
     }
 
     setIsSupported(true);
-    initializingRef.current = true;
+    initRef.current = true;
 
     // Load OneSignal SDK
     const script = document.createElement("script");
     script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
     script.defer = true;
-    script.onload = async () => {
+    scriptRef.current = script;
+
+    script.onload = () => {
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalDeferred.push(async function(OneSignal) {
-        if (!OneSignal) return;
+        if (!OneSignal) {
+          setIsLoading(false);
+          return;
+        }
         
         try {
           await OneSignal.init({
             appId: appId,
             allowLocalhostAsSecureOrigin: true,
-            notifyButton: {
-              enable: false,
-            },
+            notifyButton: { enable: false },
           });
 
-          // Check subscription status
           const enabled = await OneSignal.isPushNotificationsEnabled();
           setIsSubscribed(enabled);
-
-          // Listen for subscription changes
-          OneSignal.on("subscriptionChange", async (isSubscribed: boolean) => {
-            setIsSubscribed(isSubscribed);
-          });
-
           setIsLoading(false);
+
+          OneSignal.on("subscriptionChange", (subscribed: boolean) => {
+            setIsSubscribed(subscribed);
+          });
         } catch (error) {
           console.error("Failed to initialize OneSignal:", error);
           setIsLoading(false);
@@ -112,45 +118,33 @@ export function usePushNotifications() {
     document.head.appendChild(script);
 
     return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
+      if (scriptRef.current?.parentNode) {
+        scriptRef.current.parentNode.removeChild(scriptRef.current);
       }
     };
   }, [appId]);
 
-  // Register player ID with backend
-  const registerPlayerId = useCallback(async () => {
-    if (!window.OneSignal || !user) return;
-
-    try {
-      const playerId = await window.OneSignal.getUserId();
-      if (!playerId) {
-        console.log("No player ID available");
-        return;
-      }
-
-      console.log("Registering player ID:", playerId);
-
-      const { error } = await supabase.functions.invoke("register-push-token", {
-        body: { playerId },
-      });
-
-      if (error) {
-        console.error("Failed to register push token:", error);
-      } else {
-        console.log("Push token registered successfully");
-      }
-    } catch (error) {
-      console.error("Error registering player ID:", error);
-    }
-  }, [user]);
-
-  // Register when user logs in and is subscribed
+  // Register player ID with backend when subscribed
   useEffect(() => {
-    if (user && isSubscribed && !isLoading) {
-      registerPlayerId();
-    }
-  }, [user, isSubscribed, isLoading, registerPlayerId]);
+    if (!user || !isSubscribed || isLoading || !window.OneSignal) return;
+
+    const registerPlayer = async () => {
+      try {
+        const playerId = await window.OneSignal?.getUserId();
+        if (!playerId) return;
+
+        console.log("Registering player ID:", playerId);
+        await supabase.functions.invoke("register-push-token", {
+          body: { playerId },
+        });
+        console.log("Push token registered successfully");
+      } catch (error) {
+        console.error("Error registering player ID:", error);
+      }
+    };
+
+    registerPlayer();
+  }, [user, isSubscribed, isLoading]);
 
   // Request permission
   const requestPermission = useCallback(async () => {
@@ -160,21 +154,19 @@ export function usePushNotifications() {
       await window.OneSignal.showSlidedownPrompt();
       const enabled = await window.OneSignal.isPushNotificationsEnabled();
       setIsSubscribed(enabled);
-      
-      if (enabled) {
-        await registerPlayerId();
-      }
-      
       return enabled;
     } catch (error) {
       console.error("Failed to request permission:", error);
       return false;
     }
-  }, [registerPlayerId]);
+  }, []);
 
   // Toggle subscription
   const toggleSubscription = useCallback(async () => {
-    if (!window.OneSignal) return;
+    if (!window.OneSignal) {
+      console.log("OneSignal not initialized");
+      return;
+    }
 
     try {
       if (isSubscribed) {
