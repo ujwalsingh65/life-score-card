@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.register-push-token]
 verify_jwt = true
+
+[functions.get-onesignal-config]
+verify_jwt = false
