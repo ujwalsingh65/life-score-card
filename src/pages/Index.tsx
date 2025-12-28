@@ -13,6 +13,7 @@ import { ProgressRing } from "@/components/ProgressRing";
 import { AnalyticsCharts } from "@/components/AnalyticsCharts";
 import { PlayerLevel } from "@/components/PlayerLevel";
 import { AchievementsPanel } from "@/components/AchievementsPanel";
+import { RankProgressionDisplay } from "@/components/RankProgressionDisplay";
 import { AchievementToast } from "@/components/AchievementToast";
 import { LevelUpOverlay } from "@/components/LevelUpOverlay";
 import { NotificationToggle } from "@/components/NotificationToggle";
@@ -427,7 +428,10 @@ export default function Index() {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics">
-            <AnalyticsCharts habits={habits} logs={logs} />
+            <div className="space-y-6">
+              <AnalyticsCharts habits={habits} logs={logs} />
+              <RankProgressionDisplay stats={playerStats} />
+            </div>
           </TabsContent>
 
           {/* Achievements Tab */}
