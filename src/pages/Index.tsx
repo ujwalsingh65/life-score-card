@@ -36,6 +36,8 @@ export default function Index() {
     habits,
     logs,
     totalXP,
+    dailyXPEarned,
+    dailyXPCap,
     unlockedAchievements,
     loading: dataLoading,
     addHabit,
@@ -48,6 +50,7 @@ export default function Index() {
     getBestStreak,
     getTodayHabits,
     getTodayStats,
+    getRemainingDailyXP,
   } = useSupabaseData();
 
   const { playQuestComplete, playLevelUp, playAchievement, playXPGain } = useSoundEffects();
@@ -181,28 +184,34 @@ export default function Index() {
       const willBePerfect = todayStats.completed + 1 === todayStats.total;
       const earned = calculateCompletionXP(streak, willBePerfect);
       
-      const newTotal = await updateXP(earned);
-      const newStats = calculatePlayerStats(newTotal);
-      setPlayerStats(newStats);
-      setXpGain(earned);
+      const { xpGained, cappedOut } = await updateXP(earned);
       
-      // Play quest complete sound
-      playQuestComplete();
-      
-      // Check for level up
-      if (newStats.level > previousLevel) {
-        setTimeout(() => {
-          setLevelUpData({ level: newStats.level, rank: newStats.rank });
-          setShowLevelUp(true);
-          playLevelUp();
-        }, 300);
+      if (xpGained > 0) {
+        const newStats = calculatePlayerStats(totalXP + xpGained);
+        setPlayerStats(newStats);
+        setXpGain(xpGained);
+        
+        // Play quest complete sound
+        playQuestComplete();
+        
+        // Check for level up
+        if (newStats.level > previousLevel) {
+          setTimeout(() => {
+            setLevelUpData({ level: newStats.level, rank: newStats.rank });
+            setShowLevelUp(true);
+            playLevelUp();
+          }, 300);
+        }
+        
+        // Clear XP popup after animation
+        setTimeout(() => setXpGain(0), 2000);
+        
+        // Check for new achievements
+        setTimeout(() => checkAchievements(), 500);
+      } else if (cappedOut) {
+        // Show that daily XP cap was reached
+        playQuestComplete();
       }
-      
-      // Clear XP popup after animation
-      setTimeout(() => setXpGain(0), 2000);
-      
-      // Check for new achievements
-      setTimeout(() => checkAchievements(), 500);
     }
   };
   
@@ -276,7 +285,7 @@ export default function Index() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <PlayerLevel stats={playerStats} showXPGain={xpGain} />
+          <PlayerLevel stats={playerStats} showXPGain={xpGain} dailyXPEarned={dailyXPEarned} dailyXPCap={dailyXPCap} />
         </motion.div>
 
         {/* Hero Stats */}
