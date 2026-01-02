@@ -31,9 +31,9 @@ export function Leaderboard({ currentUserId }: LeaderboardProps) {
       setError(null);
 
       try {
-        // Fetch player stats ordered by XP
+        // Fetch player stats ordered by XP using secure leaderboard view
         const { data: statsData, error: statsError } = await supabase
-          .from("player_stats")
+          .from("leaderboard_stats")
           .select("id, total_xp")
           .order("total_xp", { ascending: false })
           .limit(50);
