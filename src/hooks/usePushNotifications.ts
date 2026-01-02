@@ -136,11 +136,9 @@ export function usePushNotifications() {
         const playerId = await window.OneSignal?.getUserId();
         if (!playerId) return;
 
-        console.log("Registering player ID:", playerId);
         await supabase.functions.invoke("register-push-token", {
           body: { playerId },
         });
-        console.log("Push token registered successfully");
       } catch (error) {
         console.error("Error registering player ID:", error);
       }
