@@ -51,11 +51,22 @@ serve(async (req) => {
 
     const { playerId } = await req.json();
 
-    if (!playerId) {
+    // Validate playerId is present and is a string
+    if (!playerId || typeof playerId !== "string") {
       throw new Error("Player ID is required");
     }
 
-    console.log(`Registering player ID ${playerId} for user ${user.id}`);
+    // OneSignal player IDs are UUIDs (8-4-4-4-12 format)
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_REGEX.test(playerId)) {
+      console.error(`Invalid player ID format received`);
+      throw new Error("Invalid player ID format");
+    }
+
+    // Additional length check for safety
+    if (playerId.length > 100) {
+      throw new Error("Player ID too long");
+    }
 
     // Update the user's profile with the OneSignal player ID
     const { error: updateError } = await supabase
@@ -71,7 +82,7 @@ serve(async (req) => {
       throw updateError;
     }
 
-    console.log(`Successfully registered player ID for user ${user.id}`);
+    // Successfully registered player ID
 
     return new Response(
       JSON.stringify({ success: true }),
