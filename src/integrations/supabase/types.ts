@@ -189,6 +189,21 @@ export type Database = {
         }
         Relationships: []
       }
+      leaderboard_stats: {
+        Row: {
+          id: string | null
+          total_xp: number | null
+        }
+        Insert: {
+          id?: string | null
+          total_xp?: number | null
+        }
+        Update: {
+          id?: string | null
+          total_xp?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
