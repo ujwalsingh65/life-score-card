@@ -13,6 +13,28 @@ serve(async (req) => {
   }
 
   try {
+    // Validate CRON_SECRET for authentication
+    const CRON_SECRET = Deno.env.get("CRON_SECRET");
+    if (!CRON_SECRET) {
+      console.error("CRON_SECRET not configured");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check for authorization header with cron secret
+    const authHeader = req.headers.get("authorization");
+    const providedSecret = authHeader?.replace("Bearer ", "");
+    
+    if (providedSecret !== CRON_SECRET) {
+      console.error("Unauthorized: Invalid or missing cron secret");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const ONESIGNAL_APP_ID = Deno.env.get("ONESIGNAL_APP_ID");
     const ONESIGNAL_REST_API_KEY = Deno.env.get("ONESIGNAL_REST_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
