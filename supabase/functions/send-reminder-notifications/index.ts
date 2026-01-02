@@ -1,12 +1,35 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// Allowed origins for CORS - restrict to known domains
+const allowedOrigins = [
+  "https://lovable.dev",
+  "https://fdljfwseyawrcgcloysn.lovableproject.com",
+  "http://localhost:5173",
+  "http://localhost:4173",
+  "http://localhost:8080",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowedOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Credentials": "true",
+  };
+}
+
+// Sanitize habit name to prevent notification injection
+function sanitizeHabitName(name: string): string {
+  return name
+    .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // Remove control characters
+    .substring(0, 100); // Limit length
+}
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -131,7 +154,7 @@ serve(async (req) => {
           app_id: ONESIGNAL_APP_ID,
           include_player_ids: [playerId],
           headings: { en: "Quest Reminder 🎯" },
-          contents: { en: `${habit.icon} Time to complete: ${habit.name}` },
+          contents: { en: `${habit.icon} Time to complete: ${sanitizeHabitName(habit.name)}` },
           url: Deno.env.get("SITE_URL") || "https://lovable.dev",
         }),
       });
