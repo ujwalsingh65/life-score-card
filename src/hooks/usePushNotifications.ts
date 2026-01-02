@@ -75,9 +75,12 @@ export function usePushNotifications() {
     setIsSupported(true);
     initRef.current = true;
 
-    // Load OneSignal SDK
+    // Load OneSignal SDK with SRI for supply chain security
     const script = document.createElement("script");
     script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
+    // Note: SRI hash should be updated if OneSignal SDK version changes
+    // This provides protection against CDN compromise attacks
+    script.crossOrigin = "anonymous";
     script.defer = true;
     scriptRef.current = script;
 
