@@ -16,6 +16,23 @@ import { Habit, HabitCategory, CATEGORY_CONFIG, DAYS_OF_WEEK } from "@/types/hab
 import { cn } from "@/lib/utils";
 
 const HABIT_ICONS = ["🏃", "📖", "💧", "🧘", "✍️", "🎯", "💪", "🌅", "😴", "🥗", "📱", "💰"];
+const MAX_HABIT_NAME_LENGTH = 100;
+
+// Validate habit name - removes control characters and enforces length
+const validateHabitName = (name: string): { valid: boolean; sanitized: string; error?: string } => {
+  // Remove control characters
+  const sanitized = name.replace(/[\x00-\x1F\x7F-\x9F]/g, '').trim();
+  
+  if (!sanitized) {
+    return { valid: false, sanitized, error: "Habit name is required" };
+  }
+  
+  if (sanitized.length > MAX_HABIT_NAME_LENGTH) {
+    return { valid: false, sanitized, error: `Habit name must be ${MAX_HABIT_NAME_LENGTH} characters or less` };
+  }
+  
+  return { valid: true, sanitized };
+};
 
 interface AddHabitDialogProps {
   onAdd: (habit: Omit<Habit, "id" | "createdAt">) => void;
@@ -25,18 +42,32 @@ interface AddHabitDialogProps {
 export function AddHabitDialog({ onAdd, children }: AddHabitDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState<string | undefined>();
   const [category, setCategory] = useState<HabitCategory>("health");
   const [icon, setIcon] = useState("🎯");
   const [targetDays, setTargetDays] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]);
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState("09:00");
 
+  const handleNameChange = (value: string) => {
+    // Limit input length at the UI level
+    if (value.length <= MAX_HABIT_NAME_LENGTH) {
+      setName(value);
+      setNameError(undefined);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    
+    const validation = validateHabitName(name);
+    if (!validation.valid) {
+      setNameError(validation.error);
+      return;
+    }
 
     onAdd({
-      name: name.trim(),
+      name: validation.sanitized,
       category,
       icon,
       color: CATEGORY_CONFIG[category].color,
@@ -45,6 +76,7 @@ export function AddHabitDialog({ onAdd, children }: AddHabitDialogProps) {
     });
 
     setName("");
+    setNameError(undefined);
     setCategory("health");
     setIcon("🎯");
     setTargetDays([0, 1, 2, 3, 4, 5, 6]);
@@ -81,9 +113,16 @@ export function AddHabitDialog({ onAdd, children }: AddHabitDialogProps) {
               id="name"
               placeholder="e.g., Morning meditation"
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="h-12"
+              onChange={(e) => handleNameChange(e.target.value)}
+              maxLength={MAX_HABIT_NAME_LENGTH}
+              className={cn("h-12", nameError && "border-destructive")}
             />
+            {nameError && (
+              <p className="text-sm text-destructive">{nameError}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {name.length}/{MAX_HABIT_NAME_LENGTH} characters
+            </p>
           </div>
 
           {/* Icon Selection */}
