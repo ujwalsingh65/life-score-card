@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Zap, LayoutGrid, Calendar, Trash2, MoreVertical, BarChart3, Trophy, LogOut, Loader2, User, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
-import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { HabitCard } from "@/components/HabitCard";
 import { AddHabitDialog } from "@/components/AddHabitDialog";
 import { WeeklyView } from "@/components/WeeklyView";
@@ -57,7 +56,7 @@ export default function Index() {
     getRemainingDailyXP,
   } = useSupabaseData();
 
-  const { playQuestComplete, playLevelUp, playAchievement, playXPGain } = useSoundEffects();
+  
 
   const [playerStats, setPlayerStats] = useState<PlayerStats>(() => 
     calculatePlayerStats(totalXP)
@@ -216,14 +215,13 @@ export default function Index() {
         const unlocked = await unlockAchievement(achievement.id);
         if (unlocked) {
           setNewAchievement(achievement);
-          playAchievement();
           return; // Only show one at a time
         }
       }
     }
   };
 
-  // Handle quest completion with XP, achievements, and sounds
+  // Handle quest completion with XP and achievements
   const handleQuestToggle = async (habitId: string) => {
     const wasCompleted = isCompleted(habitId, today);
     const completed = await toggleHabitLog(habitId, today);
@@ -235,22 +233,18 @@ export default function Index() {
       const willBePerfect = todayStats.completed + 1 === todayStats.total;
       const earned = calculateCompletionXP(streak, willBePerfect);
       
-      const { xpGained, cappedOut } = await updateXP(earned);
+      const { xpGained } = await updateXP(earned);
       
       if (xpGained > 0) {
         const newStats = calculatePlayerStats(totalXP + xpGained);
         setPlayerStats(newStats);
         setXpGain(xpGained);
         
-        // Play quest complete sound
-        playQuestComplete();
-        
         // Check for level up
         if (newStats.level > previousLevel) {
           setTimeout(() => {
             setLevelUpData({ level: newStats.level, rank: newStats.rank });
             setShowLevelUp(true);
-            playLevelUp();
           }, 300);
         }
         
@@ -259,9 +253,6 @@ export default function Index() {
         
         // Check for new achievements
         setTimeout(() => checkAchievements(), 500);
-      } else if (cappedOut) {
-        // Show that daily XP cap was reached
-        playQuestComplete();
       }
     }
   };
@@ -269,7 +260,6 @@ export default function Index() {
   // Check achievements on habit creation
   const handleAddHabit = async (habit: Parameters<typeof addHabit>[0]) => {
     await addHabit(habit);
-    playXPGain();
     setTimeout(() => checkAchievements(), 300);
   };
 
@@ -287,13 +277,11 @@ export default function Index() {
       const newStats = calculatePlayerStats(totalXP + xpGained);
       setPlayerStats(newStats);
       setXpGain(xpGained);
-      playAchievement();
       
       if (newStats.level > previousLevel) {
         setTimeout(() => {
           setLevelUpData({ level: newStats.level, rank: newStats.rank });
           setShowLevelUp(true);
-          playLevelUp();
         }, 300);
       }
       
@@ -315,13 +303,11 @@ export default function Index() {
       const newStats = calculatePlayerStats(totalXP + xpGained);
       setPlayerStats(newStats);
       setXpGain(xpGained);
-      playAchievement();
       
       if (newStats.level > previousLevel) {
         setTimeout(() => {
           setLevelUpData({ level: newStats.level, rank: newStats.rank });
           setShowLevelUp(true);
-          playLevelUp();
         }, 300);
       }
       
@@ -344,13 +330,11 @@ export default function Index() {
       const newStats = calculatePlayerStats(totalXP + xpGained);
       setPlayerStats(newStats);
       setXpGain(xpGained);
-      playAchievement();
       
       if (newStats.level > previousLevel) {
         setTimeout(() => {
           setLevelUpData({ level: newStats.level, rank: newStats.rank });
           setShowLevelUp(true);
-          playLevelUp();
         }, 300);
       }
       
