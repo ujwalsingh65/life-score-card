@@ -46,10 +46,10 @@ export function Leaderboard({ currentUserId }: LeaderboardProps) {
           return;
         }
 
-        // Fetch profiles for display names and customization
+        // Fetch profiles for display names and customization using secure view
         const userIds = statsData.map(s => s.id);
         const { data: profilesData, error: profilesError } = await supabase
-          .from("profiles")
+          .from("leaderboard_profiles")
           .select("id, display_name, selected_avatar_id, selected_title_id")
           .in("id", userIds);
 

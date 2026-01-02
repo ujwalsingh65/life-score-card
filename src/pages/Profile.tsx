@@ -77,14 +77,30 @@ export default function Profile() {
     fileInputRef.current?.click();
   };
 
+  // Strict allowlists for avatar upload security
+  const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+  const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
-    if (!file.type.startsWith("image/")) {
+    // Validate MIME type against strict allowlist (blocks SVG and other risky types)
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       toast({
         title: "Invalid file type",
-        description: "Please upload an image file.",
+        description: "Only JPG, PNG, GIF, and WebP images are allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file extension against strict allowlist
+    const fileExt = file.name.split(".").pop()?.toLowerCase();
+    if (!fileExt || !ALLOWED_IMAGE_EXTENSIONS.includes(fileExt)) {
+      toast({
+        title: "Invalid file extension",
+        description: "Only JPG, PNG, GIF, and WebP files are allowed.",
         variant: "destructive",
       });
       return;
@@ -101,8 +117,9 @@ export default function Profile() {
 
     setIsUploading(true);
 
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+    // Use validated extension for safe filename
+    const safeExt = file.type === 'image/jpeg' ? 'jpg' : fileExt;
+    const fileName = `${user.id}/${Date.now()}.${safeExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from("avatars")
@@ -323,7 +340,7 @@ export default function Profile() {
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/*"
+                      accept=".jpg,.jpeg,.png,.gif,.webp"
                       onChange={handleFileChange}
                       className="hidden"
                     />
