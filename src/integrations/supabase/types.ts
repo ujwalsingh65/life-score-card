@@ -168,7 +168,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      leaderboard_profiles: {
+        Row: {
+          display_name: string | null
+          id: string | null
+          selected_avatar_id: string | null
+          selected_title_id: string | null
+        }
+        Insert: {
+          display_name?: string | null
+          id?: string | null
+          selected_avatar_id?: string | null
+          selected_title_id?: string | null
+        }
+        Update: {
+          display_name?: string | null
+          id?: string | null
+          selected_avatar_id?: string | null
+          selected_title_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
