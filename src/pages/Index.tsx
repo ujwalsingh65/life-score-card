@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Zap, LayoutGrid, Calendar, Trash2, MoreVertical, BarChart3, Trophy, LogOut, Loader2, User, Users } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { HabitCard } from "@/components/HabitCard";
@@ -55,6 +56,27 @@ export default function Index() {
     getTodayStats,
     getRemainingDailyXP,
   } = useSupabaseData();
+
+  const [displayName, setDisplayName] = useState<string>("");
+
+  // Fetch profile display name
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchProfile = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      
+      if (data?.display_name) {
+        setDisplayName(data.display_name);
+      }
+    };
+    
+    fetchProfile();
+  }, [user]);
 
   
 
@@ -423,7 +445,7 @@ export default function Index() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <PlayerLevel stats={playerStats} showXPGain={xpGain} dailyXPEarned={dailyXPEarned} dailyXPCap={dailyXPCap} />
+          <PlayerLevel stats={playerStats} showXPGain={xpGain} dailyXPEarned={dailyXPEarned} dailyXPCap={dailyXPCap} displayName={displayName} />
         </motion.div>
 
         {/* Hero Stats */}
