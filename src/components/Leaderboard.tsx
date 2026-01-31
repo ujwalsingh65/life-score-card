@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trophy, Crown, Medal, Award, User, Loader2 } from "lucide-react";
+import { Trophy, Crown, Medal, Award, User, Loader2, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { calculatePlayerStats, getRankColor } from "@/lib/xp";
 import { getAvatarById, getTitleById } from "@/lib/customization";
 import { cn } from "@/lib/utils";
-
 interface LeaderboardEntry {
   id: string;
   displayName: string;
@@ -163,19 +163,24 @@ export function Leaderboard({ currentUserId }: LeaderboardProps) {
             transition={{ delay: 0.1 }}
             className="flex flex-col items-center pt-6"
           >
-            <div className="relative">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gray-400 to-gray-300 flex items-center justify-center border-2 border-gray-300">
-                <User className="h-8 w-8 text-gray-700" />
+            <Link to={`/hunter/${entries[1].id}`} className="flex flex-col items-center hover:scale-105 transition-transform">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gray-400 to-gray-300 flex items-center justify-center border-2 border-gray-300">
+                  <User className="h-8 w-8 text-gray-700" />
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-800">
+                  2
+                </div>
               </div>
-              <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-800">
-                2
-              </div>
-            </div>
-            <p className="mt-3 text-sm font-bold text-foreground truncate max-w-full px-2">
-              {entries[1].displayName}
-            </p>
-            <p className="text-xs text-muted-foreground">Lv. {entries[1].level}</p>
-            <p className="text-xs font-bold text-primary">{entries[1].totalXP.toLocaleString()} XP</p>
+              <p className="mt-3 text-sm font-bold text-foreground truncate max-w-full px-2">
+                {entries[1].displayName}
+              </p>
+              <p className="text-xs font-bold" style={{ color: getRankColor(entries[1].rank) }}>
+                {entries[1].rank}
+              </p>
+              <p className="text-xs text-muted-foreground">Lv. {entries[1].level}</p>
+              <p className="text-xs font-bold text-primary">{entries[1].totalXP.toLocaleString()} XP</p>
+            </Link>
           </motion.div>
 
           {/* 1st Place */}
@@ -184,22 +189,25 @@ export function Leaderboard({ currentUserId }: LeaderboardProps) {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center"
           >
-            <div className="relative">
-              <Crown className="absolute -top-4 left-1/2 -translate-x-1/2 h-6 w-6 text-yellow-400" />
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center border-2 border-yellow-300 shadow-[0_0_20px_hsla(45,100%,50%,0.4)]">
-                <User className="h-10 w-10 text-yellow-900" />
+            <Link to={`/hunter/${entries[0].id}`} className="flex flex-col items-center hover:scale-105 transition-transform">
+              <div className="relative">
+                <Crown className="absolute -top-4 left-1/2 -translate-x-1/2 h-6 w-6 text-yellow-400" />
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center border-2 border-yellow-300 shadow-[0_0_20px_hsla(45,100%,50%,0.4)]">
+                  <User className="h-10 w-10 text-yellow-900" />
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-7 h-7 rounded-full bg-yellow-400 flex items-center justify-center text-sm font-bold text-yellow-900">
+                  1
+                </div>
               </div>
-              <div className="absolute -bottom-2 -right-2 w-7 h-7 rounded-full bg-yellow-400 flex items-center justify-center text-sm font-bold text-yellow-900">
-                1
-              </div>
-            </div>
-            <p className="mt-3 text-sm font-bold text-foreground truncate max-w-full px-2">
-              {entries[0].displayName}
-            </p>
-            <p className="text-xs" style={{ color: getRankColor(entries[0].rank) }}>
-              {entries[0].rank}
-            </p>
-            <p className="text-sm font-bold text-primary">{entries[0].totalXP.toLocaleString()} XP</p>
+              <p className="mt-3 text-sm font-bold text-foreground truncate max-w-full px-2">
+                {entries[0].displayName}
+              </p>
+              <p className="text-sm font-bold" style={{ color: getRankColor(entries[0].rank) }}>
+                {entries[0].rank}
+              </p>
+              <p className="text-xs text-muted-foreground">Lv. {entries[0].level}</p>
+              <p className="text-sm font-bold text-primary">{entries[0].totalXP.toLocaleString()} XP</p>
+            </Link>
           </motion.div>
 
           {/* 3rd Place */}
@@ -209,19 +217,24 @@ export function Leaderboard({ currentUserId }: LeaderboardProps) {
             transition={{ delay: 0.2 }}
             className="flex flex-col items-center pt-8"
           >
-            <div className="relative">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-600 to-orange-500 flex items-center justify-center border-2 border-amber-500">
-                <User className="h-7 w-7 text-amber-900" />
+            <Link to={`/hunter/${entries[2].id}`} className="flex flex-col items-center hover:scale-105 transition-transform">
+              <div className="relative">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-600 to-orange-500 flex items-center justify-center border-2 border-amber-500">
+                  <User className="h-7 w-7 text-amber-900" />
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-amber-600 flex items-center justify-center text-xs font-bold text-amber-100">
+                  3
+                </div>
               </div>
-              <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-amber-600 flex items-center justify-center text-xs font-bold text-amber-100">
-                3
-              </div>
-            </div>
-            <p className="mt-3 text-sm font-bold text-foreground truncate max-w-full px-2">
-              {entries[2].displayName}
-            </p>
-            <p className="text-xs text-muted-foreground">Lv. {entries[2].level}</p>
-            <p className="text-xs font-bold text-primary">{entries[2].totalXP.toLocaleString()} XP</p>
+              <p className="mt-3 text-sm font-bold text-foreground truncate max-w-full px-2">
+                {entries[2].displayName}
+              </p>
+              <p className="text-xs font-bold" style={{ color: getRankColor(entries[2].rank) }}>
+                {entries[2].rank}
+              </p>
+              <p className="text-xs text-muted-foreground">Lv. {entries[2].level}</p>
+              <p className="text-xs font-bold text-primary">{entries[2].totalXP.toLocaleString()} XP</p>
+            </Link>
           </motion.div>
         </div>
       )}
@@ -233,6 +246,7 @@ export function Leaderboard({ currentUserId }: LeaderboardProps) {
           const avatar = getAvatarById(entry.selectedAvatarId);
           const title = getTitleById(entry.selectedTitleId);
           const AvatarIcon = avatar?.icon || User;
+          const rankColor = getRankColor(entry.rank);
           
           return (
             <motion.div
@@ -240,60 +254,71 @@ export function Leaderboard({ currentUserId }: LeaderboardProps) {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.03 }}
-              className={cn(
-                "flex items-center gap-4 p-3 rounded-lg border transition-all",
-                getPositionStyle(index),
-                isCurrentUser && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-              )}
             >
-              {/* Position */}
-              <div className="w-8 flex items-center justify-center">
-                {getRankIcon(index)}
-              </div>
-
-              {/* Avatar with customization */}
-              <div 
-                className="w-10 h-10 rounded-full flex items-center justify-center"
-                style={{ 
-                  backgroundColor: avatar?.bgColor || `${getRankColor(entry.rank)}30`,
-                  border: `2px solid ${avatar?.color || getRankColor(entry.rank)}` 
-                }}
+              <Link
+                to={`/hunter/${entry.id}`}
+                className={cn(
+                  "flex items-center gap-4 p-3 rounded-lg border transition-all hover:scale-[1.02] hover:shadow-lg",
+                  getPositionStyle(index),
+                  isCurrentUser && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                )}
               >
-                <AvatarIcon className="h-5 w-5" style={{ color: avatar?.color || getRankColor(entry.rank) }} />
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className={cn(
-                    "font-bold truncate",
-                    isCurrentUser && "text-primary"
-                  )}>
-                    {entry.displayName}
-                    {isCurrentUser && <span className="ml-2 text-xs">(You)</span>}
-                  </p>
+                {/* Position */}
+                <div className="w-8 flex items-center justify-center">
+                  {getRankIcon(index)}
                 </div>
-                <p className="text-xs" style={{ color: title?.color || getRankColor(entry.rank) }}>
-                  {title?.title || entry.rank}
-                </p>
-              </div>
 
-              {/* Stats */}
-              <div className="text-right">
-                <p className="font-bold text-primary">{entry.totalXP.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">XP</p>
-              </div>
+                {/* Avatar with customization */}
+                <div 
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ 
+                    backgroundColor: avatar?.bgColor || `${rankColor}30`,
+                    border: `2px solid ${avatar?.color || rankColor}` 
+                  }}
+                >
+                  <AvatarIcon className="h-5 w-5" style={{ color: avatar?.color || rankColor }} />
+                </div>
 
-              {/* Level */}
-              <div 
-                className="w-10 h-10 rounded-lg flex items-center justify-center font-bold"
-                style={{ 
-                  backgroundColor: `${getRankColor(entry.rank)}20`,
-                  color: getRankColor(entry.rank)
-                }}
-              >
-                {entry.level}
-              </div>
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className={cn(
+                      "font-bold truncate",
+                      isCurrentUser && "text-primary"
+                    )}>
+                      {entry.displayName}
+                      {isCurrentUser && <span className="ml-2 text-xs">(You)</span>}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-3 w-3" style={{ color: rankColor }} />
+                    <p className="text-xs font-bold" style={{ color: rankColor }}>
+                      {entry.rank}
+                    </p>
+                    <span className="text-xs text-muted-foreground">•</span>
+                    <p className="text-xs" style={{ color: title?.color }}>
+                      {title?.title}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="text-right">
+                  <p className="font-bold text-primary">{entry.totalXP.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">XP</p>
+                </div>
+
+                {/* Level */}
+                <div 
+                  className="w-10 h-10 rounded-lg flex items-center justify-center font-bold"
+                  style={{ 
+                    backgroundColor: `${rankColor}20`,
+                    color: rankColor
+                  }}
+                >
+                  {entry.level}
+                </div>
+              </Link>
             </motion.div>
           );
         })}
