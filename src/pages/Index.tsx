@@ -57,26 +57,6 @@ export default function Index() {
     getRemainingDailyXP,
   } = useSupabaseData();
 
-  const [displayName, setDisplayName] = useState<string>("");
-
-  // Fetch profile display name
-  useEffect(() => {
-    if (!user) return;
-    
-    const fetchProfile = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("id", user.id)
-        .maybeSingle();
-      
-      if (data?.display_name) {
-        setDisplayName(data.display_name);
-      }
-    };
-    
-    fetchProfile();
-  }, [user]);
 
   
 
@@ -445,7 +425,7 @@ export default function Index() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <PlayerLevel stats={playerStats} showXPGain={xpGain} dailyXPEarned={dailyXPEarned} dailyXPCap={dailyXPCap} displayName={displayName} />
+          <PlayerLevel stats={playerStats} showXPGain={xpGain} dailyXPEarned={dailyXPEarned} dailyXPCap={dailyXPCap} />
         </motion.div>
 
         {/* Hero Stats */}
