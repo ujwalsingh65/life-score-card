@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ProfileCustomization } from "@/components/ProfileCustomization";
+import { AchievementsPanel } from "@/components/AchievementsPanel";
 import { calculatePlayerStats } from "@/lib/xp";
 import { getAvatarById, getTitleById } from "@/lib/customization";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -30,6 +31,13 @@ export default function Profile() {
   const [isUploading, setIsUploading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [isSavingCustomization, setIsSavingCustomization] = useState(false);
+  const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
+  const [achievementStats, setAchievementStats] = useState({
+    maxStreak: 0,
+    totalCompletions: 0,
+    perfectDays: 0,
+    habitsCreated: 0,
+  });
 
   const playerStats = calculatePlayerStats(totalXP);
 
@@ -40,6 +48,7 @@ export default function Profile() {
     }
 
     const fetchProfile = async () => {
+      // Fetch profile data
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("display_name, avatar_url, selected_avatar_id, selected_title_id")
@@ -55,6 +64,7 @@ export default function Profile() {
         setSelectedTitleId(profileData.selected_title_id || "novice");
       }
 
+      // Fetch player stats
       const { data: statsData, error: statsError } = await supabase
         .from("player_stats")
         .select("total_xp")
@@ -65,6 +75,89 @@ export default function Profile() {
         console.error("Error fetching stats:", statsError);
       } else if (statsData) {
         setTotalXP(statsData.total_xp);
+      }
+
+      // Fetch unlocked achievements
+      const { data: achievementsData } = await supabase
+        .from("unlocked_achievements")
+        .select("achievement_id")
+        .eq("user_id", user.id);
+
+      if (achievementsData) {
+        setUnlockedAchievements(achievementsData.map((a) => a.achievement_id));
+      }
+
+      // Fetch habits and logs for stats calculation
+      const { data: habitsData } = await supabase
+        .from("habits")
+        .select("id, target_days")
+        .eq("user_id", user.id);
+
+      const { data: logsData } = await supabase
+        .from("habit_logs")
+        .select("habit_id, date, completed")
+        .eq("user_id", user.id);
+
+      if (habitsData && logsData) {
+        const habits = habitsData;
+        const logs = logsData.filter((l) => l.completed);
+
+        // Calculate max streak
+        let maxStreak = 0;
+        habits.forEach((habit) => {
+          const habitLogs = logs
+            .filter((l) => l.habit_id === habit.id)
+            .map((l) => l.date)
+            .sort();
+
+          let streak = 0;
+          let bestStreak = 0;
+          let prevDate: Date | null = null;
+
+          habitLogs.forEach((dateStr) => {
+            const date = new Date(dateStr);
+            if (prevDate) {
+              const diff = (date.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
+              if (diff === 1) {
+                streak++;
+              } else {
+                streak = 1;
+              }
+            } else {
+              streak = 1;
+            }
+            bestStreak = Math.max(bestStreak, streak);
+            prevDate = date;
+          });
+
+          maxStreak = Math.max(maxStreak, bestStreak);
+        });
+
+        // Calculate perfect days
+        const dateMap: Record<string, Set<string>> = {};
+        logs.forEach((log) => {
+          if (!dateMap[log.date]) {
+            dateMap[log.date] = new Set();
+          }
+          dateMap[log.date].add(log.habit_id);
+        });
+
+        let perfectDays = 0;
+        Object.entries(dateMap).forEach(([dateStr, completedHabitIds]) => {
+          const date = new Date(dateStr);
+          const dayOfWeek = date.getDay();
+          const habitsForDay = habits.filter((h) => h.target_days.includes(dayOfWeek));
+          if (habitsForDay.length > 0 && habitsForDay.every((h) => completedHabitIds.has(h.id))) {
+            perfectDays++;
+          }
+        });
+
+        setAchievementStats({
+          maxStreak,
+          totalCompletions: logs.length,
+          perfectDays,
+          habitsCreated: habits.length,
+        });
       }
 
       setIsFetching(false);
@@ -494,6 +587,31 @@ export default function Profile() {
                   selectedTitleId={selectedTitleId}
                   onSave={handleSaveCustomization}
                   saving={isSavingCustomization}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Achievements */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className="border-primary/20 bg-card shadow-card">
+              <CardHeader>
+                <CardTitle className="text-primary font-display flex items-center gap-2">
+                  <Trophy className="h-5 w-5" />
+                  ACHIEVEMENTS
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Track your progress and unlock badges!
+                </p>
+              </CardHeader>
+              <CardContent>
+                <AchievementsPanel
+                  unlockedAchievementIds={unlockedAchievements}
+                  stats={achievementStats}
                 />
               </CardContent>
             </Card>

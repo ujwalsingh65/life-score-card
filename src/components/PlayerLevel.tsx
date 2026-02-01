@@ -1,6 +1,5 @@
-import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Shield, TrendingUp, Battery, Clock, Target, ChevronRight, User } from "lucide-react";
+import { Zap, Shield, TrendingUp, Battery, Clock, Target } from "lucide-react";
 import { PlayerStats, LEVEL_CONFIG } from "@/types/habit";
 import { getRankColor } from "@/lib/xp";
 import { cn } from "@/lib/utils";
@@ -10,8 +9,6 @@ interface PlayerLevelProps {
   showXPGain?: number;
   dailyXPEarned?: number;
   dailyXPCap?: number;
-  displayName?: string;
-  showProfileLink?: boolean;
 }
 
 // Calculate estimated time to max level
@@ -43,7 +40,7 @@ function calculateTimeToMax(totalXP: number, dailyXPCap: number): { days: number
   return { days: daysRemaining, months, years, formatted: formatted.trim() };
 }
 
-export function PlayerLevel({ stats, showXPGain, dailyXPEarned = 0, dailyXPCap = 70, displayName, showProfileLink = true }: PlayerLevelProps) {
+export function PlayerLevel({ stats, showXPGain, dailyXPEarned = 0, dailyXPCap = 70 }: PlayerLevelProps) {
   const progressPercent = stats.xpToNextLevel > 0 
     ? (stats.currentXP / stats.xpToNextLevel) * 100 
     : 100;
@@ -56,7 +53,7 @@ export function PlayerLevel({ stats, showXPGain, dailyXPEarned = 0, dailyXPCap =
   const timeToMax = calculateTimeToMax(stats.totalXP, dailyXPCap);
   const isMaxLevel = stats.level >= 100;
 
-  const content = (
+  return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -86,13 +83,7 @@ export function PlayerLevel({ stats, showXPGain, dailyXPEarned = 0, dailyXPCap =
               </span>
             </div>
             <div>
-              {displayName && (
-                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  {displayName}
-                </h2>
-              )}
-              <h3 className="text-sm font-bold text-muted-foreground">Hunter Level</h3>
+              <h3 className="text-lg font-bold text-foreground">Hunter Level</h3>
               <p 
                 className="text-sm font-semibold"
                 style={{ color: rankColor }}
@@ -102,16 +93,9 @@ export function PlayerLevel({ stats, showXPGain, dailyXPEarned = 0, dailyXPCap =
             </div>
           </div>
           
-          <div className="flex flex-col items-end gap-1">
-            <div className="flex items-center gap-2 text-primary">
-              <Zap className="h-5 w-5" />
-              <span className="font-mono text-lg font-bold">{stats.totalXP.toLocaleString()} XP</span>
-            </div>
-            {showProfileLink && (
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                View Profile <ChevronRight className="h-3 w-3" />
-              </span>
-            )}
+          <div className="flex items-center gap-2 text-primary">
+            <Zap className="h-5 w-5" />
+            <span className="font-mono text-lg font-bold">{stats.totalXP.toLocaleString()} XP</span>
           </div>
         </div>
 
@@ -248,14 +232,4 @@ export function PlayerLevel({ stats, showXPGain, dailyXPEarned = 0, dailyXPCap =
       </div>
     </motion.div>
   );
-
-  if (showProfileLink) {
-    return (
-      <Link to="/profile" className="block hover:scale-[1.01] transition-transform">
-        {content}
-      </Link>
-    );
-  }
-
-  return content;
 }
